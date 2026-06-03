@@ -442,22 +442,15 @@
             font-weight: 500;
         }
 
-        .tab-btn:nth-child(1),
-        .tab-btn:nth-child(2) {
-            background: transparent;
-            color: var(--text-secondary);
-        }
-
-        .tab-btn:nth-child(1):hover,
-        .tab-btn:nth-child(2):hover {
+        .tab-btn:hover {
             color: var(--text-primary);
         }
 
-        .tab-btn:nth-child(1).active,
-        .tab-btn:nth-child(2).active {
+        .tab-btn.active {
             background: transparent;
             color: var(--text-primary);
             border-bottom-color: var(--accent);
+            font-weight: 700;
         }
 
         .tabs-content {
@@ -1289,6 +1282,119 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--accent-dim);
         }
+        /* Multi-Tempo Cards */
+        .multitempo-card {
+            background: var(--bg-control);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .multitempo-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .multitempo-card.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 0 16px rgba(99, 102, 241, 0.6);
+        }
+
+        .multitempo-card-header {
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .multitempo-card-name {
+            font-size: 12px;
+            opacity: 0.8;
+            word-break: break-word;
+        }
+
+        .multitempo-card-control {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+        }
+
+        .multitempo-card-control input[type="checkbox"] {
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
+
+        .multitempo-card-bpm {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .multitempo-card-bpm label {
+            font-size: 10px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        .multitempo-card-bpm input[type="range"] {
+            width: 100%;
+            height: 4px;
+        }
+
+        .multitempo-card-bpm-value {
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .multitempo-card-volume {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .multitempo-card-volume label {
+            font-size: 10px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        .multitempo-card-volume input[type="range"] {
+            width: 100%;
+            height: 4px;
+        }
+
+        .multitempo-card-volume-value {
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* Pulsing animation quando slice toca */
+        @keyframes multitempo-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+            }
+        }
+
+        .multitempo-card.playing {
+            animation: multitempo-pulse 0.6s;
+        }
+
     </style>
 </head>
 <body>
@@ -1310,6 +1416,7 @@
         <div class="tabs-nav">
             <button class="tab-btn active" data-tab="editor">Editor</button>
             <button class="tab-btn" data-tab="sequencer">Sequencer</button>
+            <button class="tab-btn" data-tab="multitempo">Multi-Tempo</button>
         </div>
 
         <!-- EDITOR TAB -->
@@ -1567,6 +1674,18 @@
             </div>
         </div>
 
+        <!-- MULTI-TEMPO TAB -->
+        <div id="multitempo-tab" class="tabs-content" style="grid-template-columns: 1fr; grid-template-rows: auto 1fr;">
+            <!-- Multi-Tempo Controls Bar (ultra compacta) -->
+            <div style="display: flex; align-items: center; gap: 6px; padding: 3px 8px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);">
+                <button id="multiTempoPlayBtn" style="padding: 4px 10px; background: var(--accent); color: #fff; border: none; border-radius: 2px; cursor: pointer; font-weight: 600; font-size: 11px;">▶</button>
+                <button id="multiTempoStopBtn" style="padding: 4px 10px; background: var(--danger); color: #fff; border: none; border-radius: 2px; cursor: pointer; font-weight: 600; font-size: 11px;">■</button>
+            </div>
+
+            <!-- Multi-Tempo Cards Grid (6 colunas) -->
+            <div id="multiTempoGrid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; overflow: auto; padding: 12px; background: var(--bg-panel); align-content: start;"></div>
+        </div>
+
         <!-- FOOTER: Keyboard QWERTY real com 2 linhas -->
         <div class="footer" style="display: flex; flex-direction: column; padding: 8px 15px; gap: 6px; overflow: visible; background: var(--bg-panel); border-top: 1px solid var(--border); align-items: center; justify-content: center; height: auto;">
             <!-- Linha de cima: W E T Y U O P (sustenidos) -->
@@ -1796,7 +1915,12 @@
             recordingAnalyser: null,
             recordingStream: null,
             peakLevel: 0,
-            micDeviceId: ''  // selected microphone deviceId
+            micDeviceId: '',  // selected microphone deviceId
+            // Multi-Tempo
+            multiTempoPlaying: false,
+            multiTempoSlices: [], // Array com { sliceIdx, bpm, volume, isPlaying, nextPlayTime }
+            multiTempoIntervalId: null,
+            multiTempoStartTime: null
         };
 
         // Rastrear valores anteriores de start/end para detectar mudanças
@@ -1817,7 +1941,84 @@
             });
         });
 
-        // === AUDIO CONTEXT ===
+        // === MULTI-TEMPO ===
+        function updateMultiTempoGrid() {
+            const grid = document.getElementById('multiTempoGrid');
+            if (!grid || !state.slices || state.slices.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--text-secondary);">Import audio and create slices to use Multi-Tempo</div>';
+                return;
+            }
+
+            grid.innerHTML = '';
+
+            state.slices.forEach((slice, idx) => {
+                // Encontrar ou criar estado do multi-tempo para este slice
+                let mtSlice = state.multiTempoSlices.find(m => m.sliceIdx === idx);
+                if (!mtSlice) {
+                    mtSlice = { sliceIdx: idx, bpm: 120, volume: 100, isPlaying: false, nextPlayTime: null };
+                    state.multiTempoSlices.push(mtSlice);
+                }
+
+                // Obter cor e nota do slice
+                const color = state.colors[idx % state.colors.length];
+                const note = state.noteOffset + idx;
+                const noteName = getNoteName(note);
+
+                const card = document.createElement('div');
+                card.className = 'multitempo-card';
+                card.id = `multitempo-card-${idx}`;
+                card.style.borderLeft = `4px solid ${color}`;
+                card.style.background = `linear-gradient(to right, ${color}15, var(--bg-control))`;
+                
+                card.innerHTML = `
+                    <div class="multitempo-card-header">Slice #${idx}</div>
+                    <div class="multitempo-card-name" style="color: ${color}; font-weight: 600;">${noteName}</div>
+                    
+                    <div class="multitempo-card-control">
+                        <input type="checkbox" class="multitempo-enable" data-slice="${idx}" ${mtSlice.isPlaying ? 'checked' : ''}>
+                        <span>Enable</span>
+                    </div>
+
+                    <div class="multitempo-card-bpm">
+                        <label>BPM</label>
+                        <input type="range" class="multitempo-bpm" data-slice="${idx}" min="10" max="300" step="1" value="${mtSlice.bpm}" style="width: 100%;">
+                        <div class="multitempo-card-bpm-value">${mtSlice.bpm}</div>
+                    </div>
+
+                    <div class="multitempo-card-volume">
+                        <label>Vol</label>
+                        <input type="range" class="multitempo-volume" data-slice="${idx}" min="0" max="100" step="1" value="${mtSlice.volume}" style="width: 100%;">
+                        <div class="multitempo-card-volume-value">${mtSlice.volume}%</div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+
+                // Event listeners
+                card.querySelector('.multitempo-enable').addEventListener('change', (e) => {
+                    const sliceIdx = parseInt(e.target.dataset.slice);
+                    const mt = state.multiTempoSlices.find(m => m.sliceIdx === sliceIdx);
+                    if (mt) mt.isPlaying = e.target.checked;
+                    updateMultiTempoGrid();
+                });
+
+                card.querySelector('.multitempo-bpm').addEventListener('input', (e) => {
+                    const sliceIdx = parseInt(e.target.dataset.slice);
+                    const mt = state.multiTempoSlices.find(m => m.sliceIdx === sliceIdx);
+                    if (mt) mt.bpm = parseInt(e.target.value);
+                    card.querySelector('.multitempo-card-bpm-value').textContent = mt.bpm;
+                });
+
+                card.querySelector('.multitempo-volume').addEventListener('input', (e) => {
+                    const sliceIdx = parseInt(e.target.dataset.slice);
+                    const mt = state.multiTempoSlices.find(m => m.sliceIdx === sliceIdx);
+                    if (mt) mt.volume = parseInt(e.target.value);
+                    card.querySelector('.multitempo-card-volume-value').textContent = mt.volume + '%';
+                });
+            });
+        }
+
+        // 🆕 === AUDIO CONTEXT ===
         function initAudioContext() {
             if (!state.audioContext) {
                 state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1903,6 +2104,41 @@
         document.getElementById('bpmInput').addEventListener('input', (e) => {
             const val = parseInt(e.target.value);
             if (val >= 40 && val <= 300) { state.bpm = val; state.scenes[state.currentScene].bpm = val; }
+        });
+
+        // === MULTI-TEMPO LISTENERS ===
+        document.getElementById('multiTempoPlayBtn').addEventListener('click', () => {
+            if (state.slices.length === 0) return;
+
+            // 🆕 Garantir que o AudioContext está ativo (pode estar suspended)
+            const ctx = initAudioContext();
+            if (ctx.state === 'suspended') ctx.resume();
+
+            // 🆕 Evitar múltiplos loops em simultâneo
+            if (state.multiTempoIntervalId) clearTimeout(state.multiTempoIntervalId);
+
+            state.multiTempoPlaying = true;
+            state.multiTempoStartTime = Date.now();
+            
+            // Reset all next play times
+            state.multiTempoSlices.forEach(mt => {
+                mt.nextPlayTime = state.multiTempoStartTime;
+            });
+
+            document.getElementById('multiTempoPlayBtn').style.background = 'var(--success)';
+            multiTempoPlay();
+        });
+
+        document.getElementById('multiTempoStopBtn').addEventListener('click', () => {
+            state.multiTempoPlaying = false;
+            if (state.multiTempoIntervalId) clearTimeout(state.multiTempoIntervalId);
+            
+            // Remove active class de todos os cards
+            document.querySelectorAll('.multitempo-card.active').forEach(card => {
+                card.classList.remove('active', 'playing');
+            });
+
+            document.getElementById('multiTempoPlayBtn').style.background = 'var(--accent)';
         });
 
         document.getElementById('swingSlider').addEventListener('input', (e) => {
@@ -2045,47 +2281,38 @@
             }
 
             const height = clientHeight;
-            // 🆕 Canvas width = viewport width (não afetado por zoom)
             const viewportWidth = clientWidth;
-            
-            canvas.width = viewportWidth;
+
+            // 🆕 Canvas width = viewport width * zoom (largura real, scroll horizontal)
+            const canvasWidth = Math.round(viewportWidth * state.zoom);
+
+            canvas.width = canvasWidth;
             canvas.height = height;
+            // 🆕 CSS width para o scroll horizontal funcionar no container
+            canvas.style.width = canvasWidth + 'px';
 
             // Background
             canvasCtx.fillStyle = '#252f3f';
-            canvasCtx.fillRect(0, 0, viewportWidth, height);
+            canvasCtx.fillRect(0, 0, canvasWidth, height);
 
-            // 🆕 Se temos cache, renderiza a partir dele
+            // 🆕 Renderiza a waveform na largura total (com zoom)
             if (state.waveformCache) {
-                renderWaveformFromCache(viewportWidth, height);
+                renderWaveformFromCache(canvasWidth, height);
             } else {
-                renderWaveformDirect(viewportWidth, height);
+                renderWaveformDirect(canvasWidth, height);
             }
 
-            // Draw slices
+            // Draw slices (usam canvas.width → alinhados com zoom)
             drawSlices();
         }
 
-        // 🆕 Renderizar com zoom horizontal (timeline stretch)
-        function renderWaveformFromCache(viewportWidth, height) {
+        // 🆕 Renderizar direto no canvas principal na largura total (com zoom)
+        function renderWaveformFromCache(canvasWidth, height) {
             if (!state.waveformCache || !state.waveformCache.levels) return;
 
             const masterVolume = parseFloat(document.getElementById('masterVolume').value);
 
-            // 🆕 Canvas width actual com zoom
-            const canvasWidth = viewportWidth * state.zoom;
-
-            // Criar um canvas off-screen para desenhar a waveform completa
-            const offscreenCanvas = document.createElement('canvas');
-            offscreenCanvas.width = canvasWidth;
-            offscreenCanvas.height = height;
-            const offCtx = offscreenCanvas.getContext('2d');
-
-            // Background
-            offCtx.fillStyle = '#252f3f';
-            offCtx.fillRect(0, 0, canvasWidth, height);
-
-            // 🆕 Usar o nível de zoom mais apropriado do cache
+            // 🆕 Usar o nível de zoom mais apropriado do cache (mais detalhe com zoom)
             const zoomLevel = Math.max(1, Math.floor(state.zoom));
             const cacheKey = `zoom${Math.min(zoomLevel, 16)}`;
             const peaks = state.waveformCache.levels[cacheKey] || state.waveformCache.levels.zoom1;
@@ -2093,14 +2320,14 @@
             if (!peaks || peaks.length === 0) return;
 
             // === FILL AREA ===
-            const gradient = offCtx.createLinearGradient(0, 0, 0, height);
+            const gradient = canvasCtx.createLinearGradient(0, 0, 0, height);
             gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
             gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.15)');
             gradient.addColorStop(1, 'rgba(99, 102, 241, 0.3)');
 
-            offCtx.fillStyle = gradient;
-            offCtx.beginPath();
-            offCtx.moveTo(0, height / 2);
+            canvasCtx.fillStyle = gradient;
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(0, height / 2);
 
             // Parte de cima
             for (let x = 0; x < canvasWidth; x++) {
@@ -2108,7 +2335,7 @@
                 const peak = peaks[Math.min(peakIdx, peaks.length - 1)];
                 const maxVal = peak ? Math.abs(peak.max) * masterVolume : 0;
                 const y = height / 2 - (maxVal * height / 2);
-                offCtx.lineTo(x, y);
+                canvasCtx.lineTo(x, y);
             }
 
             // Parte de baixo
@@ -2117,45 +2344,41 @@
                 const peak = peaks[Math.min(peakIdx, peaks.length - 1)];
                 const minVal = peak ? Math.abs(peak.min) * masterVolume : 0;
                 const y = height / 2 + (minVal * height / 2);
-                offCtx.lineTo(x, y);
+                canvasCtx.lineTo(x, y);
             }
 
-            offCtx.closePath();
-            offCtx.fill();
+            canvasCtx.closePath();
+            canvasCtx.fill();
 
             // === RMS ENVELOPE ===
-            offCtx.strokeStyle = 'rgba(99, 102, 241, 0.95)';
-            offCtx.lineWidth = 1.5;
+            canvasCtx.strokeStyle = 'rgba(99, 102, 241, 0.95)';
+            canvasCtx.lineWidth = 1.5;
 
             // Top line
-            offCtx.beginPath();
+            canvasCtx.beginPath();
             for (let x = 0; x < canvasWidth; x++) {
                 const peakIdx = Math.floor((x / canvasWidth) * peaks.length);
                 const peak = peaks[Math.min(peakIdx, peaks.length - 1)];
                 const rms = peak ? peak.rms * masterVolume : 0;
                 const y = height / 2 - (rms * height / 2);
 
-                if (x === 0) offCtx.moveTo(x, y);
-                else offCtx.lineTo(x, y);
+                if (x === 0) canvasCtx.moveTo(x, y);
+                else canvasCtx.lineTo(x, y);
             }
-            offCtx.stroke();
+            canvasCtx.stroke();
 
             // Bottom line
-            offCtx.beginPath();
+            canvasCtx.beginPath();
             for (let x = 0; x < canvasWidth; x++) {
                 const peakIdx = Math.floor((x / canvasWidth) * peaks.length);
                 const peak = peaks[Math.min(peakIdx, peaks.length - 1)];
                 const rms = peak ? peak.rms * masterVolume : 0;
                 const y = height / 2 + (rms * height / 2);
 
-                if (x === 0) offCtx.moveTo(x, y);
-                else offCtx.lineTo(x, y);
+                if (x === 0) canvasCtx.moveTo(x, y);
+                else canvasCtx.lineTo(x, y);
             }
-            offCtx.stroke();
-
-            // 🆕 Desenhar o canvas off-screen no canvas principal com clipping
-            // Por enquanto, desenha tudo (sem scroll horizontal)
-            canvasCtx.drawImage(offscreenCanvas, 0, 0);
+            canvasCtx.stroke();
         }
 
         // Fallback: renderizar direto do áudio (antigo)
@@ -2650,11 +2873,14 @@
         }
 
         // === SLICE PLAYBACK ===
-        function playSlice(sliceIdx, midiNote = null) {
+        function playSlice(sliceIdx, midiNote = null, volumeOverride = null) {
             if (!state.audioBuffer) return;
 
             const slice = state.slices[sliceIdx];
             if (!slice || !slice.enabled) return;
+
+            // Volume efetivo: override (ex: multi-tempo) ou volume da slice
+            const effectiveVolume = volumeOverride !== null ? volumeOverride : slice.volume;
 
             // Para qualquer playback anterior desta slice
             if (state.playingSources[sliceIdx]) {
@@ -2684,7 +2910,7 @@
             const fadeOutTime = (slice.fadeOut || 50) / 1000;
             
             gainNode.gain.setValueAtTime(0, ctx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(slice.volume * parseFloat(document.getElementById('masterVolume').value), ctx.currentTime + fadeInTime);
+            gainNode.gain.linearRampToValueAtTime(effectiveVolume * parseFloat(document.getElementById('masterVolume').value), ctx.currentTime + fadeInTime);
             
             panNode.pan.value = slice.pan;
 
@@ -2720,7 +2946,7 @@
                     fadeOutTime: fadeOutTime
                 };
                 
-                gainNode.gain.setValueAtTime(slice.volume * parseFloat(document.getElementById('masterVolume').value), ctx.currentTime + duration - fadeOutTime);
+                gainNode.gain.setValueAtTime(effectiveVolume * parseFloat(document.getElementById('masterVolume').value), ctx.currentTime + duration - fadeOutTime);
                 gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
                 
                 source.stop(ctx.currentTime + duration + 0.01);
@@ -3046,6 +3272,9 @@
             if (state.slices.length > 0) {
                 initKeyboard();
             }
+
+            // 🆕 Atualizar grid multi-tempo
+            updateMultiTempoGrid();
         }
 
         function updateSliceParam(idx, param, value) {
@@ -3815,6 +4044,40 @@
                 container.appendChild(btn);
             }
             updateSceneButtons();
+        }
+
+        function multiTempoPlay() {
+            if (!state.multiTempoPlaying) return;
+
+            // Verificar cada slice e tocar se chegou a hora
+            const currentTime = Date.now();
+
+            state.multiTempoSlices.forEach(mt => {
+                if (!mt.isPlaying || !state.slices[mt.sliceIdx]) return;
+
+                // Calcular quando deveria tocar este slice
+                const beatDurationMs = (60000 / mt.bpm);  // Duração de 1 compasso em ms (4/4)
+
+                if (currentTime >= mt.nextPlayTime) {
+                    // Tocar o slice com o seu volume independente (0-100 → 0-1)
+                    playSlice(mt.sliceIdx, null, mt.volume / 100);
+
+                    // Visual feedback
+                    const card = document.getElementById(`multitempo-card-${mt.sliceIdx}`);
+                    if (card) {
+                        card.classList.add('active', 'playing');
+                        setTimeout(() => {
+                            card.classList.remove('active');
+                        }, 100);
+                    }
+
+                    // Agendar próxima vez
+                    mt.nextPlayTime = currentTime + beatDurationMs;
+                }
+            });
+
+            // Continuar a verificar
+            state.multiTempoIntervalId = setTimeout(multiTempoPlay, 20);
         }
 
         function startSequencer() {
