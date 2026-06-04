@@ -51,6 +51,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+            touch-action: manipulation;
         }
 
         /* Custom scrollbar */
@@ -187,6 +188,7 @@
             cursor: ns-resize;
             border: 1px solid rgba(0, 0, 0, 0.5);
             transition: transform 0.05s ease;
+            touch-action: none;
         }
 
         .knob::before {
@@ -587,6 +589,7 @@
             display: block;
             height: 100%;
             min-width: 100%;
+            touch-action: none;
         }
 
         .controls-bar {
@@ -1503,6 +1506,31 @@
             opacity: 0.8;
         }
 
+        /* === TABLET RESPONSIVE === */
+        /* Tablet landscape & portáteis pequenos */
+        @media (max-width: 1024px) {
+            #editor-tab.tabs-content.active {
+                grid-template-columns: 180px 1fr 250px !important;
+            }
+            header { padding: 0 14px; }
+            .effects-panel .knob { width: 40px; height: 40px; }
+        }
+
+        /* Tablet portrait */
+        @media (max-width: 834px) {
+            #editor-tab.tabs-content.active {
+                grid-template-columns: 150px 1fr 210px !important;
+            }
+            /* Rack de efeitos: scroll horizontal para os pedais não ficarem esmagados */
+            .effects-panel {
+                display: flex !important;
+                overflow-x: auto !important;
+            }
+            .effects-panel .pedal {
+                min-width: 150px;
+                flex: 0 0 auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2685,7 +2713,11 @@
             prevValues.end = slice.end;
         }
 
-        canvas.addEventListener('mousedown', (e) => {
+        // Deteção manual de duplo-clique/toque (pointerdown não traz detail fiável)
+        let lastCanvasTapTime = 0;
+        let lastCanvasTapX = 0;
+
+        canvas.addEventListener('pointerdown', (e) => {
             if (!state.audioBuffer) return;
 
             const rect = canvas.getBoundingClientRect();
@@ -2705,15 +2737,16 @@
                 return;
             }
 
-            // Double-click cria nova slice
-            if (e.detail === 2) {
-                console.log('🔪 Double-click detected, creating new slice');
+            // Double-click/tap cria nova slice (deteção manual: ~350ms e perto na horizontal)
+            const nowTap = performance.now();
+            const isDoubleTap = (nowTap - lastCanvasTapTime < 350) && Math.abs(xPixels - lastCanvasTapX) < 24;
+            lastCanvasTapTime = nowTap;
+            lastCanvasTapX = xPixels;
+            if (isDoubleTap) {
                 const time = (xPixels / cw) * state.audioBuffer.duration;
-                console.log('Click position time:', time.toFixed(3), 's');
                 
                 const nextSlice = state.slices.find(s => s.start > time);
                 const endTime = nextSlice ? nextSlice.start : state.audioBuffer.duration;
-                console.log('End time:', endTime.toFixed(3), 's');
 
                 const newSlice = {
                     start: time,
@@ -2731,14 +2764,10 @@
                 state.slices.push(newSlice);
                 state.slices.sort((a, b) => a.start - b.start);
                 state.selectedSliceForEditing = newSlice;
-                
-                console.log('✅ Slice created:', newSlice);
-                console.log('Total slices:', state.slices.length);
-                
+
                 initSequencerGrid();
                 updateSlicesList();
                 drawWaveform();
-                console.log('✅ UI updated');
                 return;
             }
 
@@ -2770,7 +2799,7 @@
 
         // === MOUSE MOVE NO CANVAS - cursor feedback ===
 
-        canvas.addEventListener('mousemove', (e) => {
+        canvas.addEventListener('pointermove', (e) => {
             if (!state.audioBuffer || !state.selectedSliceForEditing) {
                 canvas.style.cursor = 'crosshair';
                 return;
@@ -2791,7 +2820,7 @@
             }
         });
 
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('pointermove', (e) => {
             if (state.draggingSlice === null || !state.audioBuffer || !state.dragSliceRef) return;
 
             const rect = canvas.getBoundingClientRect();
@@ -2815,17 +2844,29 @@
 
             updateSlicesList();
             drawWaveform();
+            // Preview de áudio com throttle (evita avalanche de retriggers no drag)
             if (state.draggingSlice >= 0 && state.draggingSlice < state.slices.length) {
-                updatePlayingSliceAudio(state.draggingSlice);
+                const nowMs = performance.now();
+                if (nowMs - (state._lastDragRetrigger || 0) > 100) {
+                    state._lastDragRetrigger = nowMs;
+                    updatePlayingSliceAudio(state.draggingSlice);
+                }
             }
         });
 
-        document.addEventListener('mouseup', () => {
+        const endCanvasDrag = () => {
+            const idx = state.draggingSlice;
             state.draggingSlice = null;
             state.dragMode = null;
             state.dragSliceRef = null;
             canvas.style.cursor = 'crosshair';
-        });
+            // Retrigger final na posição definitiva (só age se a slice estava a tocar)
+            if (idx !== null && idx >= 0 && idx < state.slices.length) {
+                updatePlayingSliceAudio(idx);
+            }
+        };
+        document.addEventListener('pointerup', endCanvasDrag);
+        document.addEventListener('pointercancel', endCanvasDrag);
 
         // === SCROLL TO SELECTED SLICE ===
         function scrollToSlice(slice) {
@@ -3075,6 +3116,7 @@
                     sliceIdx: sliceIdx
                 };
             } else { // shot
+                const token = Symbol('voice');
                 source.start(startTime, 0, duration);
                 state.playingSources[sliceIdx] = { 
                     source, 
@@ -3084,7 +3126,8 @@
                     startTime: startTime,
                     sliceIdx: sliceIdx,
                     duration: duration,
-                    fadeOutTime: fadeOutTime
+                    fadeOutTime: fadeOutTime,
+                    token: token
                 };
                 
                 gainNode.gain.setValueAtTime(effectiveVolume * parseFloat(document.getElementById('masterVolume').value), startTime + duration - fadeOutTime);
@@ -3095,7 +3138,8 @@
                 // 🆕 cleanup: conta o offset de agendamento (when) além da duração
                 const cleanupMs = (startTime - ctx.currentTime + duration) * 1000 + 10;
                 setTimeout(() => {
-                    if (state.playingSources[sliceIdx]) {
+                    // Só limpa se a entrada ainda for ESTA voz (evita apagar uma source nova)
+                    if (state.playingSources[sliceIdx] && state.playingSources[sliceIdx].token === token) {
                         delete state.playingSources[sliceIdx];
                         const key = document.querySelector(`[data-slice="${sliceIdx}"]`);
                         if (key) {
@@ -3562,6 +3606,9 @@
 
         // === KEYBOARD EVENTS ===
         document.addEventListener('keydown', (e) => {
+            // Ignorar auto-repeat do SO: 1 trigger por pressão, novo trigger só ao premir de novo
+            if (e.repeat) return;
+
             // Spacebar: stop sequencer
             if (e.code === 'Space') {
                 if (state.isSequencerPlaying) {
@@ -5336,9 +5383,10 @@
                     document.body.style.cursor = '';
                 };
                 
-                knob.addEventListener('mousedown', onMouseDown);
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
+                knob.addEventListener('pointerdown', onMouseDown);
+                document.addEventListener('pointermove', onMouseMove);
+                document.addEventListener('pointerup', onMouseUp);
+                document.addEventListener('pointercancel', onMouseUp);
                 
                 // Double-click to reset
                 knob.addEventListener('dblclick', () => {
