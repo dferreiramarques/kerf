@@ -633,14 +633,17 @@
             border-right: 1px solid var(--f-stroke1);
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 12px;
+            padding: 10px;
             min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             scrollbar-width: thin;
             scrollbar-color: var(--f-stroke1) transparent;
         }
 
         .sidebar-section {
-            margin-bottom: 16px;
+            margin-bottom: 0;
         }
 
         .sidebar-title {
@@ -648,7 +651,7 @@
             text-transform: uppercase;
             letter-spacing: 0.8px;
             color: var(--f-fg3);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
@@ -748,6 +751,7 @@
 
         .control-group {
             display: flex;
+            align-items: center;
             gap: 8px;
         }
 
@@ -814,7 +818,7 @@
             color: var(--f-fg3);
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .slice-item {
@@ -1717,45 +1721,45 @@
             <div class="sidebar-left">
                 <div class="sidebar-section">
                     <div class="sidebar-title">Audio File</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; height: 52px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; height: 40px;">
                         <div class="file-input-wrapper" style="margin: 0; height: 100%;">
                             <input type="file" id="audioFile" accept="audio/*">
-                            <label for="audioFile" class="file-label" style="height: 100%; padding: 0; min-height: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; line-height: 1; font-size: 11px; box-sizing: border-box;">
-                                <span style="font-size: 16px; line-height: 1;">+</span>
+                            <label for="audioFile" class="file-label" style="height: 100%; padding: 0; min-height: auto; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 5px; line-height: 1; font-size: 11px; box-sizing: border-box;">
+                                <span style="font-size: 14px; line-height: 1;">+</span>
                                 <span style="font-size: 11px; line-height: 1;">Import</span>
                             </label>
                         </div>
-                        <button class="btn" id="recBtn" style="color: #ff3366; border-color: #ff3366; width: 100%; height: 100%; padding: 0; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; line-height: 1;">
-                            <span style="font-size: 16px; line-height: 1;">●</span>
+                        <button class="btn" id="recBtn" style="color: #ff3366; border-color: #ff3366; width: 100%; height: 100%; padding: 0; font-size: 11px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 5px; line-height: 1;">
+                            <span style="font-size: 14px; line-height: 1;">●</span>
                             <span style="font-size: 11px; line-height: 1;">REC</span>
                         </button>
                     </div>
                     <!-- Mic selector -->
-                    <select id="micSelect" style="width: 100%; background: var(--f-bg3); border: 1px solid var(--f-stroke1); color: var(--f-fg3); font-size: 11px; padding: 5px 6px; border-radius: var(--f-r6); font-family: inherit; margin-bottom: 6px; cursor: pointer;">
+                    <select id="micSelect" style="width: 100%; background: var(--f-bg3); border: 1px solid var(--f-stroke1); color: var(--f-fg3); font-size: 11px; padding: 4px 6px; border-radius: var(--f-r6); font-family: inherit; margin-bottom: 0; cursor: pointer;">
                         <option value="">🎙 Default Microphone</option>
                     </select>
 
-                    <div id="sampleInfo" class="sample-info" style="display: none;">
-                        <div><span class="label">File:</span> <span id="fileName">-</span></div>
-                        <div><span class="label">Duration:</span> <span id="duration">-</span>s</div>
-                        <div><span class="label">Sample Rate:</span> <span id="sampleRate">-</span>Hz</div>
-                        <button id="deleteSampleBtn" style="width: 100%; margin-top: 12px; background: rgba(255, 51, 102, 0.3); border: 1px solid #ff3366; color: #ff3366; padding: 10px; border-radius: var(--f-r2); cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; transition: all var(--f-normal) var(--f-ease);">🗑 Delete</button>
+                    <div id="sampleInfo" class="sample-info" style="display: none; padding: 8px; margin-top: 6px;">
+                        <div style="margin: 3px 0;"><span class="label">File:</span> <span id="fileName">-</span></div>
+                        <div style="margin: 3px 0;"><span class="label">Duration:</span> <span id="duration">-</span>s</div>
+                        <div style="margin: 3px 0;"><span class="label">Sample Rate:</span> <span id="sampleRate">-</span>Hz</div>
+                        <button id="deleteSampleBtn" style="width: 100%; margin-top: 8px; background: rgba(255, 51, 102, 0.3); border: 1px solid #ff3366; color: #ff3366; padding: 7px; border-radius: var(--f-r2); cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; transition: all var(--f-normal) var(--f-ease);">🗑 Delete</button>
                     </div>
                 </div>
 
                 <div class="sidebar-section">
                     <div class="sidebar-title">Transient Sensitivity</div>
-                    <div class="control-group" style="background: var(--f-bg3); padding: 8px; border-radius: var(--f-r6);">
+                    <div class="control-group" style="background: var(--f-bg3); padding: 6px; border-radius: var(--f-r6);">
                         <input type="range" id="sensitivity" min="0.1" max="1" step="0.05" value="0.5" style="width: 100%; height: 6px; background: var(--f-bg2); border-radius: var(--f-r4); outline: none; -webkit-appearance: none; appearance: none; cursor: pointer;">
                     </div>
-                    <div style="text-align: center; font-size: 13px; color: var(--f-brand); margin-top: 8px;">
+                    <div style="text-align: center; font-size: 12px; color: var(--f-brand); margin-top: 4px;">
                         <span id="sensitivityValue">50%</span>
                     </div>
                     <!-- Buttons moved here from header -->
-                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
-                        <button class="btn" id="detectBtn" style="width: 100%; padding: 10px; font-size: 12px;">Auto Detect</button>
-                        <button class="btn" id="clearBtn" style="width: 100%; padding: 10px; font-size: 12px;">Clear</button>
-                        <button class="btn" id="exportBtn" style="width: 100%; padding: 10px; font-size: 12px;">Export WAV</button>
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
+                        <button class="btn" id="detectBtn" style="width: 100%; padding: 7px; font-size: 12px;">Auto Detect</button>
+                        <button class="btn" id="clearBtn" style="width: 100%; padding: 7px; font-size: 12px;">Clear</button>
+                        <button class="btn" id="exportBtn" style="width: 100%; padding: 7px; font-size: 12px;">Export WAV</button>
                     </div>
                 </div>
 
@@ -1763,14 +1767,14 @@
                 <div class="sidebar-section">
                     <div class="sidebar-title">MIDI Mode</div>
                     <div style="display: flex; gap: 4px; background: var(--f-bg3); padding: 4px; border-radius: var(--f-r6);">
-                        <button id="midiModeTrigger" class="btn" style="flex: 1; padding: 8px; font-size: 11px; background: var(--f-brand); color: #fff; border-color: var(--f-brand);">Trigger</button>
-                        <button id="midiModeSampler" class="btn" style="flex: 1; padding: 8px; font-size: 11px;">Sampler</button>
+                        <button id="midiModeTrigger" class="btn" style="flex: 1; padding: 6px; font-size: 11px; background: var(--f-brand); color: #fff; border-color: var(--f-brand);">Trigger</button>
+                        <button id="midiModeSampler" class="btn" style="flex: 1; padding: 6px; font-size: 11px;">Sampler</button>
                     </div>
-                    <div style="font-size: 10px; color: var(--f-fg3); text-align: center; margin-top: 6px;" id="midiModeHint">Each key triggers a different slice</div>
+                    <div style="font-size: 10px; color: var(--f-fg3); text-align: center; margin-top: 4px;" id="midiModeHint">Each key triggers a different slice</div>
                 </div>
 
                 <!-- MIDI Status -->
-                <div class="sidebar-section" style="margin-top: auto; padding-top: 12px; border-top: 1px solid var(--f-stroke1);">
+                <div class="sidebar-section" style="margin-top: auto; padding-top: 8px; border-top: 1px solid var(--f-stroke1);">
                     <div id="midiStatus" style="font-size: 11px; color: var(--f-fg3); display: flex; align-items: center; gap: 6px; justify-content: center; transition: all var(--f-slow) var(--f-ease);">
                         <span id="midiStatusDot" style="width: 8px; height: 8px; background: var(--f-fg3); border-radius: 50%; display: inline-block; transition: all var(--f-fast) var(--f-ease);"></span>
                         <span id="midiStatusText">MIDI: Disconnected</span>
