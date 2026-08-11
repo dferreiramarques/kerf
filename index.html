@@ -2640,8 +2640,8 @@
             // 🆕 CSS width para o scroll horizontal funcionar no container
             canvas.style.width = canvasWidth + 'px';
 
-            // Background
-            canvasCtx.fillStyle = '#252f3f';
+            // Background — "ecrã" escuro fixo (como o rack de efeitos), sempre alto contraste
+            canvasCtx.fillStyle = '#0b0e14';
             canvasCtx.fillRect(0, 0, canvasWidth, height);
 
             // 🆕 Renderiza a waveform na largura total (com zoom)
@@ -2668,11 +2668,11 @@
 
             if (!peaks || peaks.length === 0) return;
 
-            // === FILL AREA ===
+            // === FILL AREA (waveform real — peaks) ===
             const gradient = canvasCtx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
-            gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.15)');
-            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.3)');
+            gradient.addColorStop(0, 'rgba(226, 230, 255, 0.9)');
+            gradient.addColorStop(0.5, 'rgba(226, 230, 255, 0.5)');
+            gradient.addColorStop(1, 'rgba(226, 230, 255, 0.9)');
 
             canvasCtx.fillStyle = gradient;
             canvasCtx.beginPath();
@@ -2700,31 +2700,39 @@
             canvasCtx.fill();
 
             // === RMS ENVELOPE ===
-            canvasCtx.strokeStyle = 'rgba(99, 102, 241, 0.95)';
-            canvasCtx.lineWidth = 1.5;
+            // Nota: não desenhamos nada abaixo de SILENCE_THRESHOLD — sem isto, a linha
+            // do topo e a linha de baixo colapsam ambas em height/2 nos trechos silenciosos,
+            // o que parece uma "linha de média" no meio da waveform mas não é um elemento
+            // com propósito próprio, é só o envelope RMS achatado. Cortamos o traço aí para
+            // só mostrar linha onde há sinal real.
+            const SILENCE_THRESHOLD = 0.02;
+            canvasCtx.strokeStyle = 'rgba(129, 140, 248, 0.55)';
+            canvasCtx.lineWidth = 1;
 
             // Top line
             canvasCtx.beginPath();
+            let topActive = false;
             for (let x = 0; x < canvasWidth; x++) {
                 const peakIdx = Math.floor((x / canvasWidth) * peaks.length);
                 const peak = peaks[Math.min(peakIdx, peaks.length - 1)];
                 const rms = peak ? peak.rms * masterVolume : 0;
+                if (rms < SILENCE_THRESHOLD) { topActive = false; continue; }
                 const y = height / 2 - (rms * height / 2);
-
-                if (x === 0) canvasCtx.moveTo(x, y);
+                if (!topActive) { canvasCtx.moveTo(x, y); topActive = true; }
                 else canvasCtx.lineTo(x, y);
             }
             canvasCtx.stroke();
 
             // Bottom line
             canvasCtx.beginPath();
+            let bottomActive = false;
             for (let x = 0; x < canvasWidth; x++) {
                 const peakIdx = Math.floor((x / canvasWidth) * peaks.length);
                 const peak = peaks[Math.min(peakIdx, peaks.length - 1)];
                 const rms = peak ? peak.rms * masterVolume : 0;
+                if (rms < SILENCE_THRESHOLD) { bottomActive = false; continue; }
                 const y = height / 2 + (rms * height / 2);
-
-                if (x === 0) canvasCtx.moveTo(x, y);
+                if (!bottomActive) { canvasCtx.moveTo(x, y); bottomActive = true; }
                 else canvasCtx.lineTo(x, y);
             }
             canvasCtx.stroke();
@@ -2739,9 +2747,11 @@
             const masterVolume = parseFloat(document.getElementById('masterVolume').value);
 
             // === RMS ENVELOPE ===
-            canvasCtx.strokeStyle = 'rgba(99, 102, 241, 0.9)';
-            canvasCtx.lineWidth = 2;
+            const SILENCE_THRESHOLD_DIRECT = 0.02;
+            canvasCtx.strokeStyle = 'rgba(129, 140, 248, 0.55)';
+            canvasCtx.lineWidth = 1;
             canvasCtx.beginPath();
+            let directActive = false;
 
             const rmsWindow = Math.max(128, Math.floor(downsample * 4));
 
@@ -2760,15 +2770,15 @@
                 rms = Math.sqrt(rms / Math.max(1, count));
 
                 const x = (i / samples) * width;
+                if (rms < SILENCE_THRESHOLD_DIRECT) { directActive = false; continue; }
                 const y = height / 2 - (rms * height / 2);
-
-                if (i === 0) canvasCtx.moveTo(x, y);
+                if (!directActive) { canvasCtx.moveTo(x, y); directActive = true; }
                 else canvasCtx.lineTo(x, y);
             }
             canvasCtx.stroke();
 
             // === Mini waveform (peaks) ===
-            canvasCtx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
+            canvasCtx.strokeStyle = 'rgba(226, 230, 255, 0.85)';
             canvasCtx.lineWidth = 0.5;
 
             for (let x = 0; x < width; x++) {
