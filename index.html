@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
+    <script>
+        // Aplicar tema guardado antes do primeiro paint (evita flash light/dark)
+        (function () {
+            var saved = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#00ff88">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="Professional browser-based sample slicer and 16-step sequencer with effects chain">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>S</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>S</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <title>Spliiice — Sample Slicer</title>
     <style>
         * {
@@ -18,40 +27,139 @@
             box-sizing: border-box;
         }
 
+        /* ===== David Marques Design System — Figtree + Fluent 2 (v1.0) ===== */
+
+        /* Light theme (default tokens) */
         :root {
-            /* Modern Podcast App Palette */
-            --bg-dark: #0f1419;
-            --bg-panel: #1a202c;
-            --bg-control: #252f3f;
-            --bg-lighter: #2d3748;
-            
-            /* Accent colors - Modern blue/purple */
-            --accent: #6366f1;
-            --accent-light: #818cf8;
-            --accent-dark: #4f46e5;
-            
-            /* Text colors */
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border: #334155;
-            
-            /* Utility */
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
+            --f-bg1:     #ffffff;
+            --f-bg2:     #f5f5f5;
+            --f-bg3:     #ebebeb;
+            --f-bg4:     #e0e0e0;
+
+            --f-fg1:     #242424;
+            --f-fg2:     #424242;
+            --f-fg3:     #616161;
+            --f-fg4:     #898989;
+
+            --f-stroke1: #d1d1d1;
+            --f-stroke2: #e0e0e0;
+
+            /* Brand — cor original do Spliiice, mantida */
+            --f-brand:     #6366f1;
+            --f-brand-h:   #818cf8;
+            --f-brand-a:   #4f46e5;
+            --f-brand-bg:  #eef0fd;
+            --f-brand-bg2: rgba(99,102,241,.08);
+
+            --f-success:    #107c10;
+            --f-success-bg: rgba(16,124,16,.08);
+            --f-warning:    #ca5010;
+            --f-warning-bg: rgba(202,80,16,.08);
+            --f-danger:     #c50f1f;
+            --f-danger-bg:  rgba(197,15,31,.08);
+
+            --f-space-1: 4px;
+            --f-space-2: 8px;
+            --f-space-3: 12px;
+            --f-space-4: 16px;
+            --f-space-5: 20px;
+            --f-space-6: 24px;
+            --f-space-8: 32px;
+
+            --f-r2:    2px;
+            --f-r4:    4px;
+            --f-r6:    6px;
+            --f-r8:    8px;
+            --f-rpill: 999px;
+
+            --f-shadow2:  0 1px 2px rgba(0,0,0,.14), 0 0 2px rgba(0,0,0,.12);
+            --f-shadow4:  0 2px 4px rgba(0,0,0,.14), 0 0 2px rgba(0,0,0,.12);
+            --f-shadow8:  0 4px 8px rgba(0,0,0,.14), 0 0 2px rgba(0,0,0,.12);
+            --f-shadow16: 0 8px 16px rgba(0,0,0,.14),0 0 2px rgba(0,0,0,.12);
+            --f-shadow28: 0 14px 28px rgba(0,0,0,.22),0 0 8px rgba(0,0,0,.18);
+
+            --f-ease:   cubic-bezier(.33,0,.67,1);
+            --f-fast:   150ms;
+            --f-normal: 200ms;
+            --f-slow:   300ms;
+
+            /* Escala tipográfica */
+            --f-text-xs:   0.6875rem;
+            --f-text-sm:   0.75rem;
+            --f-text-base: 0.875rem;
+            --f-text-md:   1rem;
+            --f-text-lg:   1.125rem;
+            --f-text-xl:   1.25rem;
+            --f-text-2xl:  1.5rem;
+            --f-text-3xl:  2rem;
+
+            /* Aliases legados usados no resto do CSS (ver secção "efeitos") */
+            --grid-color: var(--f-bg3);
+        }
+
+        /* Dark theme (default para o Spliiice — instrumento de estúdio) */
+        :root,
+        [data-theme="dark"] {
+            --f-bg1:     #141414;
+            --f-bg2:     #1f1f1f;
+            --f-bg3:     #292929;
+            --f-bg4:     #333333;
+
+            --f-fg1:     #ffffff;
+            --f-fg2:     #d6d6d6;
+            --f-fg3:     #adadad;
+            --f-fg4:     #707070;
+
+            --f-stroke1: #404040;
+            --f-stroke2: #2e2e2e;
+
+            --f-brand-bg:  rgba(99,102,241,.14);
+            --f-brand-bg2: rgba(99,102,241,.08);
+
+            --f-success: #54b054;
+            --f-warning: #ffc83d;
+            --f-danger:  #f1707b;
+
             --grid-color: #1e293b;
         }
 
+        [data-theme="light"] {
+            --f-bg1:     #ffffff;
+            --f-bg2:     #f5f5f5;
+            --f-bg3:     #ebebeb;
+            --f-bg4:     #e0e0e0;
+
+            --f-fg1:     #242424;
+            --f-fg2:     #424242;
+            --f-fg3:     #616161;
+            --f-fg4:     #898989;
+
+            --f-stroke1: #d1d1d1;
+            --f-stroke2: #e0e0e0;
+
+            --f-brand-bg:  #eef0fd;
+            --f-brand-bg2: rgba(99,102,241,.08);
+
+            --f-success: #107c10;
+            --f-warning: #ca5010;
+            --f-danger:  #c50f1f;
+
+            --grid-color: var(--f-bg3);
+        }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-primary);
+            font-family: 'Figtree', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            background: var(--f-bg1);
+            color: var(--f-fg1);
             overflow: hidden;
             user-select: none;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
             touch-action: manipulation;
+            transition: background var(--f-normal) var(--f-ease), color var(--f-normal) var(--f-ease);
         }
 
         /* Custom scrollbar */
@@ -61,16 +169,16 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-panel);
+            background: var(--f-bg2);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
+            background: var(--f-stroke1);
+            border-radius: var(--f-r4);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--bg-lighter);
+            background: var(--f-bg4);
         }
 
         /* Mono apenas para valores numéricos e código */
@@ -155,7 +263,7 @@
                 inset 0 0 2px rgba(0, 0, 0, 0.8),
                 0 0 0 1.5px rgba(0, 0, 0, 0.6);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all var(--f-normal) var(--f-ease);
         }
 
         .pedal-led.on {
@@ -200,7 +308,7 @@
             width: 3px;
             height: 12px;
             background: linear-gradient(180deg, #ffffff 0%, #888 100%);
-            border-radius: 2px;
+            border-radius: var(--f-r2);
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
@@ -292,7 +400,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.1s ease;
+            transition: all var(--f-fast) var(--f-ease);
         }
 
         .pedal-footswitch:active {
@@ -309,7 +417,7 @@
             font-size: 10px;
             font-weight: 500;
             padding: 4px 8px;
-            border-radius: 4px;
+            border-radius: var(--f-r4);
             cursor: pointer;
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
             font-family: inherit;
@@ -329,15 +437,27 @@
             overflow: hidden;
         }
 
-        /* HEADER */
+        /* HEADER — Topbar (secção 8 do design system) */
         header {
-            background: var(--bg-panel);
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--f-bg1);
+            border-bottom: 1px solid var(--f-stroke2);
+            padding: 0 var(--f-space-4);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, var(--f-brand-bg) 0%, transparent 40%);
+            pointer-events: none;
+            opacity: .5;
         }
 
         .header-title::before {
@@ -346,56 +466,85 @@
         }
 
         .header-title {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: var(--text-primary);
+            font-size: var(--f-text-xl);
+            font-weight: 600;
+            color: var(--f-fg1);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: var(--f-space-2);
+            position: relative;
+            z-index: 1;
         }
 
         .header-controls {
             display: flex;
-            gap: 12px;
+            gap: var(--f-space-3);
             align-items: center;
-            font-size: 13px;
-            color: var(--text-secondary);
+            font-size: var(--f-text-sm);
+            color: var(--f-fg3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
+            border-radius: var(--f-rpill);
+            color: var(--f-fg1);
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            transition: background var(--f-fast) var(--f-ease), border-color var(--f-fast) var(--f-ease);
+        }
+
+        .theme-toggle:hover {
+            background: var(--f-bg4);
+            border-color: var(--f-brand);
         }
 
         .btn {
-            background: var(--bg-control);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 8px 16px;
+            background: var(--f-bg2);
+            border: 1px solid var(--f-stroke1);
+            color: var(--f-fg2);
+            padding: var(--f-space-2) var(--f-space-4);
             cursor: pointer;
             font-family: inherit;
-            font-size: 13px;
+            font-size: var(--f-text-base);
             letter-spacing: 0;
-            transition: all 0.15s ease;
-            border-radius: 6px;
+            transition: background var(--f-fast) var(--f-ease),
+                        border-color var(--f-fast) var(--f-ease),
+                        color var(--f-fast) var(--f-ease);
+            border-radius: var(--f-r4);
             font-weight: 500;
+            box-shadow: var(--f-shadow2);
         }
 
         .btn:hover {
-            background: var(--bg-lighter);
-            border-color: var(--accent);
-            color: var(--text-primary);
+            background: var(--f-bg3);
+            border-color: var(--f-fg4);
+            color: var(--f-fg1);
+            box-shadow: var(--f-shadow4);
         }
 
         .btn:active {
             transform: scale(0.98);
+            box-shadow: var(--f-shadow2);
         }
 
         .btn.danger {
-            color: var(--danger);
-            border-color: var(--border);
+            color: var(--f-danger);
+            border-color: var(--f-stroke1);
         }
 
         .btn.danger:hover {
-            background: var(--danger);
+            background: var(--f-danger);
             color: #ffffff;
-            border-color: var(--danger);
+            border-color: var(--f-danger);
         }
 
         /* REC Button Pulse Animation */
@@ -410,34 +559,33 @@
 
         #recBtn.recording {
             animation: pulse 1.5s infinite;
-            background: var(--danger) !important;
-            border-color: var(--danger) !important;
+            background: var(--f-danger) !important;
+            border-color: var(--f-danger) !important;
             color: #ffffff !important;
         }
 
         /* TABS */
         .tabs-nav {
             display: flex;
-            background: var(--bg-panel);
-            border-bottom: 1px solid var(--border);
+            background: var(--f-bg1);
+            border-bottom: 1px solid var(--f-stroke2);
             gap: 0;
             height: 44px;
-            padding: 0 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            padding: 0 var(--f-space-3);
         }
 
         .tab-btn {
             flex: 0 1 auto;
-            padding: 0 28px;
+            padding: 0 var(--f-space-6);
             background: transparent;
             border: none;
             border-bottom: 2px solid transparent;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             cursor: pointer;
             font-family: inherit;
-            font-size: 13px;
+            font-size: var(--f-text-base);
             letter-spacing: 0;
-            transition: all 0.15s ease;
+            transition: color var(--f-fast) var(--f-ease), border-color var(--f-fast) var(--f-ease);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -445,14 +593,14 @@
         }
 
         .tab-btn:hover {
-            color: var(--text-primary);
+            color: var(--f-fg1);
         }
 
         .tab-btn.active {
             background: transparent;
-            color: var(--text-primary);
-            border-bottom-color: var(--accent);
-            font-weight: 700;
+            color: var(--f-fg1);
+            border-bottom-color: var(--f-brand);
+            font-weight: 600;
         }
 
         .tabs-content {
@@ -481,14 +629,14 @@
 
         /* SAMPLE BROWSER */
         .sidebar-left {
-            background: var(--bg-panel);
-            border-right: 1px solid var(--border);
+            background: var(--f-bg2);
+            border-right: 1px solid var(--f-stroke1);
             overflow-y: auto;
             overflow-x: hidden;
             padding: 12px;
             min-height: 0;
             scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+            scrollbar-color: var(--f-stroke1) transparent;
         }
 
         .sidebar-section {
@@ -499,7 +647,7 @@
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             margin-bottom: 12px;
             font-weight: 600;
         }
@@ -515,37 +663,37 @@
 
         .file-label {
             display: block;
-            background: var(--bg-control);
-            border: 1px dashed var(--border);
+            background: var(--f-bg3);
+            border: 1px dashed var(--f-stroke1);
             padding: 14px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.15s ease;
-            border-radius: 8px;
+            transition: all var(--f-fast) var(--f-ease);
+            border-radius: var(--f-r8);
             font-size: 12px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
         }
 
         .file-label:hover {
-            background: var(--bg-lighter);
-            border-color: var(--accent);
-            color: var(--text-primary);
+            background: var(--f-bg4);
+            border-color: var(--f-brand);
+            color: var(--f-fg1);
         }
 
         .file-label small {
             display: block;
             font-size: 11px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             margin-top: 4px;
         }
 
         .sample-info {
-            background: var(--bg-control);
-            border: 1px solid var(--border);
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
             padding: 12px;
             margin-top: 10px;
             font-size: 12px;
-            border-radius: 8px;
+            border-radius: var(--f-r8);
             overflow: hidden;
             word-break: break-all;
         }
@@ -555,14 +703,14 @@
         }
 
         .label {
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             display: inline-block;
             min-width: 50px;
         }
 
         /* WAVEFORM EDITOR */
         .editor {
-            background: var(--bg-dark);
+            background: var(--f-bg1);
             display: flex;
             flex-direction: column;
             padding: 12px;
@@ -573,9 +721,9 @@
 
         .waveform-container {
             flex: 1;
-            background: var(--bg-control);
-            border: 1px solid var(--border);
-            border-radius: 3px;
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
+            border-radius: var(--f-r4);
             position: relative;
             overflow: hidden;
             cursor: crosshair;
@@ -605,7 +753,7 @@
 
         .control-group label {
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             text-transform: uppercase;
             letter-spacing: 1px;
             align-self: center;
@@ -615,8 +763,8 @@
         input[type="range"] {
             flex: 1;
             height: 4px;
-            border-radius: 2px;
-            background: var(--bg-panel);
+            border-radius: var(--f-r2);
+            background: var(--f-bg2);
             outline: none;
             -webkit-appearance: none;
         }
@@ -627,14 +775,14 @@
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: var(--accent);
+            background: var(--f-brand);
             cursor: pointer;
-            transition: all 0.15s ease;
-            border: 2px solid var(--bg-dark);
+            transition: all var(--f-fast) var(--f-ease);
+            border: 2px solid var(--f-bg1);
         }
 
         input[type="range"]::-webkit-slider-thumb:hover {
-            background: var(--accent-light);
+            background: var(--f-brand-h);
             transform: scale(1.15);
         }
 
@@ -642,57 +790,57 @@
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: var(--accent);
+            background: var(--f-brand);
             cursor: pointer;
-            border: 2px solid var(--bg-dark);
-            transition: all 0.15s ease;
+            border: 2px solid var(--f-bg1);
+            transition: all var(--f-fast) var(--f-ease);
         }
 
         /* SLICES LIST */
         .sidebar-right {
-            background: var(--bg-panel);
-            border-left: 1px solid var(--border);
+            background: var(--f-bg2);
+            border-left: 1px solid var(--f-stroke1);
             overflow-y: auto;
             overflow-x: hidden;
             padding: 12px;
             min-height: 0;
             scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+            scrollbar-color: var(--f-stroke1) transparent;
         }
 
         .sidebar-title {
             font-size: 11px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             text-transform: uppercase;
             letter-spacing: 0.8px;
             margin-bottom: 12px;
         }
 
         .slice-item {
-            background: var(--bg-control);
-            border: 1px solid var(--border);
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
             padding: 12px;
             margin-bottom: 8px;
-            border-radius: 8px;
+            border-radius: var(--f-r8);
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all var(--f-fast) var(--f-ease);
             font-size: 12px;
         }
 
         .slice-item:hover {
-            border-color: var(--accent);
-            background: var(--bg-lighter);
+            border-color: var(--f-brand);
+            background: var(--f-bg4);
         }
 
         .slice-item.active {
-            background: var(--bg-lighter);
-            border-color: var(--accent);
+            background: var(--f-bg4);
+            border-color: var(--f-brand);
         }
 
         .slice-item.editing {
             background: rgba(99, 102, 241, 0.1);
-            border-color: var(--accent);
+            border-color: var(--f-brand);
         }
 
         .slice-header {
@@ -701,13 +849,13 @@
             align-items: center;
             cursor: pointer;
             padding: 0 0 8px 0;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--f-stroke1);
             margin-bottom: 8px;
         }
 
         .slice-toggle {
             font-size: 10px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             min-width: 20px;
             text-align: center;
             transition: transform 0.2s ease;
@@ -739,11 +887,11 @@
         .slice-key {
             font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
-            background: var(--bg-panel);
-            color: var(--text-secondary);
+            background: var(--f-bg2);
+            color: var(--f-fg3);
             padding: 3px 8px;
-            border-radius: 4px;
-            color: var(--text-secondary);
+            border-radius: var(--f-r4);
+            color: var(--f-fg3);
         }
 
         .slice-controls {
@@ -756,18 +904,18 @@
             flex: 1;
             padding: 6px;
             background: rgba(0, 255, 136, 0.2);
-            border: 1px solid var(--accent);
-            color: var(--accent);
+            border: 1px solid var(--f-brand);
+            color: var(--f-brand);
             font-size: 11px;
             cursor: pointer;
-            border-radius: 2px;
-            transition: all 0.2s ease;
+            border-radius: var(--f-r2);
+            transition: all var(--f-normal) var(--f-ease);
             font-weight: 600;
         }
 
         .slice-btn-play:hover {
-            background: var(--accent);
-            color: var(--bg-dark);
+            background: var(--f-brand);
+            color: var(--f-bg1);
         }
 
         .slice-btn-play.playing {
@@ -794,7 +942,7 @@
 
         .param-slider label {
             min-width: 40px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
         }
 
         .param-slider input {
@@ -805,7 +953,7 @@
         .param-value {
             min-width: 30px;
             text-align: right;
-            color: var(--accent);
+            color: var(--f-brand);
             font-size: 11px;
         }
 
@@ -815,14 +963,14 @@
             gap: 8px;
             margin-top: 8px;
             font-size: 14px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
         }
 
         .slice-checkbox input {
             cursor: pointer;
             width: 14px;
             height: 14px;
-            accent-color: var(--accent);
+            accent-color: var(--f-brand);
         }
 
         .slice-mode {
@@ -834,27 +982,27 @@
         .mode-btn {
             flex: 1;
             padding: 4px;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
+            background: var(--f-bg2);
+            border: 1px solid var(--f-stroke1);
+            color: var(--f-fg3);
             font-size: 11px;
             cursor: pointer;
-            border-radius: 2px;
-            transition: all 0.2s ease;
+            border-radius: var(--f-r2);
+            transition: all var(--f-normal) var(--f-ease);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-weight: 600;
         }
 
         .mode-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
+            border-color: var(--f-brand);
+            color: var(--f-brand);
         }
 
         .mode-btn.active {
-            background: var(--accent);
-            color: var(--bg-dark);
-            border-color: var(--accent);
+            background: var(--f-brand);
+            color: var(--f-bg1);
+            border-color: var(--f-brand);
         }
 
         .slice-actions {
@@ -866,24 +1014,24 @@
         .slice-actions button {
             flex: 1;
             padding: 4px;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
+            background: var(--f-bg2);
+            border: 1px solid var(--f-stroke1);
+            color: var(--f-fg3);
             font-size: 11px;
             cursor: pointer;
-            border-radius: 2px;
-            transition: all 0.2s ease;
+            border-radius: var(--f-r2);
+            transition: all var(--f-normal) var(--f-ease);
         }
 
         .slice-actions button:hover {
-            border-color: var(--accent);
-            color: var(--accent);
+            border-color: var(--f-brand);
+            color: var(--f-brand);
         }
 
         /* EFFECTS PANEL */
         .effects-panel {
-            background: var(--bg-panel);
-            border-top: 1px solid var(--border);
+            background: var(--f-bg2);
+            border-top: 1px solid var(--f-stroke1);
             padding: 10px 15px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -894,10 +1042,10 @@
         }
 
         .effect {
-            background: var(--bg-control);
-            border: 1px solid var(--border);
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
             padding: 8px;
-            border-radius: 2px;
+            border-radius: var(--f-r2);
             display: flex;
             flex-direction: column;
             gap: 5px;
@@ -905,7 +1053,7 @@
 
         .effect-title {
             font-size: 14px;
-            color: var(--accent);
+            color: var(--f-brand);
             text-transform: uppercase;
             font-weight: 600;
             letter-spacing: 0.5px;
@@ -919,7 +1067,7 @@
 
         .effect-control label {
             font-size: 10px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             text-transform: uppercase;
         }
 
@@ -940,17 +1088,17 @@
 
         .effect-value {
             font-size: 10px;
-            color: var(--accent);
+            color: var(--f-brand);
             text-align: center;
         }
 
         .effect.active {
-            border-color: var(--accent);
+            border-color: var(--f-brand);
             box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
         }
         .keyboard {
-            background: linear-gradient(to right, var(--bg-panel), var(--bg-dark));
-            border-top: 1px solid var(--border);
+            background: linear-gradient(to right, var(--f-bg2), var(--f-bg1));
+            border-top: 1px solid var(--f-stroke1);
             padding: 15px;
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -959,13 +1107,13 @@
         }
 
         .key {
-            background: var(--bg-control);
-            border: 2px solid var(--border);
+            background: var(--f-bg3);
+            border: 2px solid var(--f-stroke1);
             padding: 12px;
             text-align: center;
             cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.15s ease;
+            border-radius: var(--f-r4);
+            transition: all var(--f-fast) var(--f-ease);
             font-size: 14px;
             font-weight: 600;
             user-select: none;
@@ -985,14 +1133,14 @@
         }
 
         .key:hover {
-            border-color: var(--accent);
+            border-color: var(--f-brand);
             box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
         }
 
         .key.active {
-            background: var(--accent);
-            color: var(--bg-dark);
-            border-color: var(--accent);
+            background: var(--f-brand);
+            color: var(--f-bg1);
+            border-color: var(--f-brand);
             box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), inset 0 0 10px rgba(0, 0, 0, 0.3);
         }
 
@@ -1008,14 +1156,14 @@
             bottom: 20px;
             right: 20px;
             font-size: 13px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             text-transform: uppercase;
             letter-spacing: 1px;
             z-index: 100;
         }
 
         .midi-indicator.connected {
-            color: var(--accent);
+            color: var(--f-brand);
             text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
 
@@ -1035,8 +1183,8 @@
             align-items: center;
             gap: 20px;
             padding: 12px 16px;
-            background: var(--bg-panel);
-            border-bottom: 1px solid var(--border);
+            background: var(--f-bg2);
+            border-bottom: 1px solid var(--f-stroke1);
             flex-wrap: wrap;
         }
 
@@ -1052,7 +1200,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
         }
 
         .swing-control {
@@ -1068,7 +1216,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
         }
 
         .sequencer-play {
@@ -1082,14 +1230,14 @@
         .sequencer-play button:not(.transport-btn) {
             min-width: 44px;
             padding: 8px 12px;
-            background: var(--bg-control);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
+            color: var(--f-fg1);
             cursor: pointer;
-            border-radius: 6px;
+            border-radius: var(--f-r6);
             font-weight: 600;
             font-size: 13px;
-            transition: all 0.15s ease;
+            transition: all var(--f-fast) var(--f-ease);
             font-family: inherit;
             white-space: nowrap;
         }
@@ -1098,14 +1246,14 @@
             min-width: auto;
             padding: 8px 12px;
             font-size: 11px;
-            color: var(--danger);
+            color: var(--f-danger);
             font-weight: 700;
         }
 
         .sequencer-play #seqClearBtn:hover {
-            background: var(--danger);
+            background: var(--f-danger);
             color: #fff;
-            border-color: var(--danger);
+            border-color: var(--f-danger);
         }
 
         .sequencer-play #seqExportBtn {
@@ -1115,14 +1263,14 @@
         }
 
         .sequencer-play button:not(.transport-btn):hover {
-            background: var(--bg-lighter);
-            border-color: var(--accent);
+            background: var(--f-bg4);
+            border-color: var(--f-brand);
         }
 
         .sequencer-grid {
-            background: var(--bg-control);
-            border: 1px solid var(--border);
-            border-radius: 6px;
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
+            border-radius: var(--f-r6);
             padding: 20px;
             display: flex;
             flex-direction: column;
@@ -1140,14 +1288,14 @@
 
         .swing-control label {
             font-size: 14px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
             text-transform: uppercase;
         }
 
         .swing-control input {
             width: 100%;
             height: 4px;
-            border-radius: 2px;
+            border-radius: var(--f-r2);
             background: var(--grid-color);
             outline: none;
             -webkit-appearance: none;
@@ -1159,7 +1307,7 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: var(--accent);
+            background: var(--f-brand);
             cursor: pointer;
             box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
         }
@@ -1168,7 +1316,7 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: var(--accent);
+            background: var(--f-brand);
             cursor: pointer;
             border: none;
             box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
@@ -1206,7 +1354,7 @@
 
         .sequencer-label {
             font-size: 13px;
-            color: var(--text-primary);
+            color: var(--f-fg1);
             font-weight: 600;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1222,14 +1370,14 @@
         .seq-mute, .seq-solo {
             width: 28px;
             height: 28px;
-            border: 1px solid var(--border);
-            background: var(--bg-control);
-            color: var(--text-secondary);
+            border: 1px solid var(--f-stroke1);
+            background: var(--f-bg3);
+            color: var(--f-fg3);
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.15s ease;
+            border-radius: var(--f-r4);
+            transition: all var(--f-fast) var(--f-ease);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1237,39 +1385,39 @@
         }
 
         .seq-mute:hover, .seq-solo:hover {
-            border-color: var(--accent);
-            color: var(--text-primary);
+            border-color: var(--f-brand);
+            color: var(--f-fg1);
         }
 
         .seq-mute.active {
-            background: var(--danger);
+            background: var(--f-danger);
             color: #fff;
-            border-color: var(--danger);
+            border-color: var(--f-danger);
         }
 
         .seq-solo.active {
-            background: var(--warning);
+            background: var(--f-warning);
             color: #000;
-            border-color: var(--warning);
+            border-color: var(--f-warning);
         }
 
         .sequencer-step {
             height: 40px;
             min-width: 40px;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
+            background: var(--f-bg2);
+            border: 1px solid var(--f-stroke1);
             cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.1s ease;
+            border-radius: var(--f-r4);
+            transition: all var(--f-fast) var(--f-ease);
         }
 
         .sequencer-step:hover {
-            border-color: var(--accent);
+            border-color: var(--f-brand);
         }
 
         .sequencer-step.active {
-            background: var(--accent);
-            border-color: var(--accent);
+            background: var(--f-brand);
+            border-color: var(--f-brand);
             box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
         }
 
@@ -1283,22 +1431,22 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-control);
+            background: var(--f-bg3);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 4px;
+            background: var(--f-brand);
+            border-radius: var(--f-r4);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-dim);
+            background: var(--f-brand-bg2);
         }
         /* Multi-Tempo Cards */
         .multitempo-card {
-            background: var(--bg-control);
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
+            border-radius: var(--f-r8);
             padding: 18px;
             display: flex;
             flex-direction: column;
@@ -1307,14 +1455,14 @@
         }
 
         .multitempo-card:hover {
-            border-color: var(--accent);
+            border-color: var(--f-brand);
             box-shadow: 0 6px 24px rgba(99, 102, 241, 0.18);
             transform: translateY(-2px);
         }
 
         /* flash breve quando a slice toca (mantém a cor/identidade) */
         .multitempo-card.active {
-            border-color: var(--accent);
+            border-color: var(--f-brand);
             filter: brightness(1.3);
         }
 
@@ -1329,7 +1477,7 @@
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 1.2px;
-            color: var(--text-secondary);
+            color: var(--f-fg3);
         }
 
         .multitempo-card-name {
@@ -1419,21 +1567,21 @@
             align-items: center;
             justify-content: center;
             gap: 7px;
-            background: linear-gradient(180deg, var(--bg-lighter) 0%, var(--bg-control) 100%);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            border-radius: 8px;
+            background: linear-gradient(180deg, var(--f-bg4) 0%, var(--f-bg3) 100%);
+            border: 1px solid var(--f-stroke1);
+            color: var(--f-fg1);
+            border-radius: var(--f-r8);
             font-family: inherit;
             font-weight: 600;
             font-size: 13px;
             letter-spacing: 0.3px;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all var(--f-fast) var(--f-ease);
             white-space: nowrap;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.3);
         }
         .transport-btn:hover {
-            border-color: var(--accent);
+            border-color: var(--f-brand);
             transform: translateY(-1px);
         }
         .transport-btn:active {
@@ -1443,26 +1591,26 @@
         .transport-btn .t-icon { font-size: 12px; line-height: 1; }
         /* Play: verde quando a tocar */
         .transport-btn.play.active {
-            background: linear-gradient(180deg, #16d99b 0%, var(--success) 100%);
-            border-color: var(--success);
+            background: linear-gradient(180deg, #16d99b 0%, var(--f-success) 100%);
+            border-color: var(--f-success);
             color: #fff;
         }
         /* Stop: tom danger no hover */
         .transport-btn.stop:hover {
-            border-color: var(--danger);
-            color: var(--danger);
+            border-color: var(--f-danger);
+            color: var(--f-danger);
         }
         /* Rec: ponto vermelho; vermelho cheio quando a gravar */
         .transport-btn.rec .t-dot {
             width: 9px; height: 9px;
             border-radius: 50%;
-            background: var(--danger);
+            background: var(--f-danger);
             flex-shrink: 0;
             box-shadow: 0 0 4px rgba(239,68,68,0.6);
         }
         .transport-btn.rec.active {
-            background: linear-gradient(180deg, #ff5d5d 0%, var(--danger) 100%);
-            border-color: var(--danger);
+            background: linear-gradient(180deg, #ff5d5d 0%, var(--f-danger) 100%);
+            border-color: var(--f-danger);
             color: #fff;
         }
         .transport-btn.rec.active .t-dot {
@@ -1476,7 +1624,7 @@
             position: relative;
             width: 30px;
             height: 16px;
-            border-radius: 8px;
+            border-radius: var(--f-r8);
             background: #3a3f4a;
             cursor: pointer;
             transition: background 0.2s ease;
@@ -1484,7 +1632,7 @@
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
         }
         .mt-toggle.on {
-            background: var(--success);
+            background: var(--f-success);
         }
         .mt-toggle::after {
             content: '';
@@ -1531,6 +1679,13 @@
                 flex: 0 0 auto;
             }
         }
+
+        /* Modal — animações (secção 6 do design system) */
+        @keyframes modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modal-slide-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: none; }
+        }
     </style>
 </head>
 <body>
@@ -1539,9 +1694,10 @@
         <header>
             <div class="header-title" id="appTitle" style="cursor: pointer;">Spliiice</div>
             <div class="header-controls">
-                <span style="font-size: 14px; color: var(--text-secondary);">
+                <span style="font-size: 14px; color: var(--f-fg3);">
                     <span id="sliceCount">0</span> slices
                 </span>
+                <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">🌙</button>
                 <button class="btn" id="saveBtn">Save Project</button>
                 <button class="btn" id="loadBtn">Load Project</button>
                 <input type="file" id="projectFile" accept=".zip" style="display: none;">
@@ -1575,7 +1731,7 @@
                         </button>
                     </div>
                     <!-- Mic selector -->
-                    <select id="micSelect" style="width: 100%; background: var(--bg-control); border: 1px solid var(--border); color: var(--text-secondary); font-size: 11px; padding: 5px 6px; border-radius: 6px; font-family: inherit; margin-bottom: 6px; cursor: pointer;">
+                    <select id="micSelect" style="width: 100%; background: var(--f-bg3); border: 1px solid var(--f-stroke1); color: var(--f-fg3); font-size: 11px; padding: 5px 6px; border-radius: var(--f-r6); font-family: inherit; margin-bottom: 6px; cursor: pointer;">
                         <option value="">🎙 Default Microphone</option>
                     </select>
 
@@ -1583,16 +1739,16 @@
                         <div><span class="label">File:</span> <span id="fileName">-</span></div>
                         <div><span class="label">Duration:</span> <span id="duration">-</span>s</div>
                         <div><span class="label">Sample Rate:</span> <span id="sampleRate">-</span>Hz</div>
-                        <button id="deleteSampleBtn" style="width: 100%; margin-top: 12px; background: rgba(255, 51, 102, 0.3); border: 1px solid #ff3366; color: #ff3366; padding: 10px; border-radius: 2px; cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; transition: all 0.2s ease;">🗑 Delete</button>
+                        <button id="deleteSampleBtn" style="width: 100%; margin-top: 12px; background: rgba(255, 51, 102, 0.3); border: 1px solid #ff3366; color: #ff3366; padding: 10px; border-radius: var(--f-r2); cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; transition: all var(--f-normal) var(--f-ease);">🗑 Delete</button>
                     </div>
                 </div>
 
                 <div class="sidebar-section">
                     <div class="sidebar-title">Transient Sensitivity</div>
-                    <div class="control-group" style="background: var(--bg-control); padding: 8px; border-radius: 6px;">
-                        <input type="range" id="sensitivity" min="0.1" max="1" step="0.05" value="0.5" style="width: 100%; height: 6px; background: var(--bg-panel); border-radius: 3px; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer;">
+                    <div class="control-group" style="background: var(--f-bg3); padding: 8px; border-radius: var(--f-r6);">
+                        <input type="range" id="sensitivity" min="0.1" max="1" step="0.05" value="0.5" style="width: 100%; height: 6px; background: var(--f-bg2); border-radius: var(--f-r4); outline: none; -webkit-appearance: none; appearance: none; cursor: pointer;">
                     </div>
-                    <div style="text-align: center; font-size: 13px; color: var(--accent); margin-top: 8px;">
+                    <div style="text-align: center; font-size: 13px; color: var(--f-brand); margin-top: 8px;">
                         <span id="sensitivityValue">50%</span>
                     </div>
                     <!-- Buttons moved here from header -->
@@ -1606,26 +1762,26 @@
                 <!-- MIDI Mode Switch -->
                 <div class="sidebar-section">
                     <div class="sidebar-title">MIDI Mode</div>
-                    <div style="display: flex; gap: 4px; background: var(--bg-control); padding: 4px; border-radius: 6px;">
-                        <button id="midiModeTrigger" class="btn" style="flex: 1; padding: 8px; font-size: 11px; background: var(--accent); color: #fff; border-color: var(--accent);">Trigger</button>
+                    <div style="display: flex; gap: 4px; background: var(--f-bg3); padding: 4px; border-radius: var(--f-r6);">
+                        <button id="midiModeTrigger" class="btn" style="flex: 1; padding: 8px; font-size: 11px; background: var(--f-brand); color: #fff; border-color: var(--f-brand);">Trigger</button>
                         <button id="midiModeSampler" class="btn" style="flex: 1; padding: 8px; font-size: 11px;">Sampler</button>
                     </div>
-                    <div style="font-size: 10px; color: var(--text-secondary); text-align: center; margin-top: 6px;" id="midiModeHint">Each key triggers a different slice</div>
+                    <div style="font-size: 10px; color: var(--f-fg3); text-align: center; margin-top: 6px;" id="midiModeHint">Each key triggers a different slice</div>
                 </div>
 
                 <!-- MIDI Status -->
-                <div class="sidebar-section" style="margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border);">
-                    <div id="midiStatus" style="font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; justify-content: center; transition: all 0.3s ease;">
-                        <span id="midiStatusDot" style="width: 8px; height: 8px; background: var(--text-secondary); border-radius: 50%; display: inline-block; transition: all 0.15s ease;"></span>
+                <div class="sidebar-section" style="margin-top: auto; padding-top: 12px; border-top: 1px solid var(--f-stroke1);">
+                    <div id="midiStatus" style="font-size: 11px; color: var(--f-fg3); display: flex; align-items: center; gap: 6px; justify-content: center; transition: all var(--f-slow) var(--f-ease);">
+                        <span id="midiStatusDot" style="width: 8px; height: 8px; background: var(--f-fg3); border-radius: 50%; display: inline-block; transition: all var(--f-fast) var(--f-ease);"></span>
                         <span id="midiStatusText">MIDI: Disconnected</span>
                     </div>
-                    <div id="midiDeviceInfo" style="font-size: 10px; color: var(--text-secondary); text-align: center; margin-top: 4px; opacity: 0.7;"></div>
+                    <div id="midiDeviceInfo" style="font-size: 10px; color: var(--f-fg3); text-align: center; margin-top: 4px; opacity: 0.7;"></div>
                 </div>
             </div>
 
             <!-- EDITOR: Waveform + Slices -->
             <div class="editor">
-                <div style="font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Waveform</div>
+                <div style="font-size: 13px; color: var(--f-fg3); text-transform: uppercase; letter-spacing: 1px;">Waveform</div>
                 <div class="waveform-container">
                     <canvas id="waveform"></canvas>
                 </div>
@@ -1633,16 +1789,16 @@
                     <div class="control-group">
                         <label>Zoom</label>
                         <input type="range" id="zoom" min="1" max="10" step="0.5" value="1">
-                        <span style="color: var(--accent); font-size: 14px; min-width: 25px;"><span id="zoomValue">1</span>x</span>
+                        <span style="color: var(--f-brand); font-size: 14px; min-width: 25px;"><span id="zoomValue">1</span>x</span>
                     </div>
                     <div class="control-group">
                         <label>Volume</label>
                         <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.7">
-                        <span style="color: var(--accent); font-size: 14px; min-width: 25px;"><span id="volumeValue">70</span>%</span>
+                        <span style="color: var(--f-brand); font-size: 14px; min-width: 25px;"><span id="volumeValue">70</span>%</span>
                     </div>
                 </div>
                 <!-- EFFECTS RACK - Pedais skeuomórficos com knobs -->
-                <div class="effects-panel" style="grid-template-columns: repeat(5, 1fr); padding: 12px 10px; gap: 10px; min-height: 170px; max-height: 170px; overflow: visible; background: linear-gradient(180deg, #15191f 0%, #0a0d12 100%); border-radius: 6px; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);">
+                <div class="effects-panel" style="grid-template-columns: repeat(5, 1fr); padding: 12px 10px; gap: 10px; min-height: 170px; max-height: 170px; overflow: visible; background: linear-gradient(180deg, #15191f 0%, #0a0d12 100%); border-radius: var(--f-r6); box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);">
                     
                     <!-- COMPRESSOR PEDAL -->
                     <div class="pedal purple" id="compPedal">
@@ -1767,28 +1923,28 @@
                 <div class="sequencer-header" style="flex-direction: column; gap: 8px; padding: 10px 16px;">
                     <!-- Row 1: Scenes -->
                     <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-                        <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); min-width: 46px;">Scene</span>
+                        <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--f-fg3); min-width: 46px;">Scene</span>
                         <div id="sceneBtns" style="display: flex; gap: 4px;">
                         </div>
-                        <button id="scenePlayBtn" style="width: 32px; height: 32px; padding: 0; margin-left: 8px; background: var(--bg-control); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s ease;" title="Play all filled scenes sequentially">▶</button>
+                        <button id="scenePlayBtn" style="width: 32px; height: 32px; padding: 0; margin-left: 8px; background: var(--f-bg3); border: 1px solid var(--f-stroke1); border-radius: var(--f-r4); color: var(--f-fg3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all var(--f-fast) var(--f-ease);" title="Play all filled scenes sequentially">▶</button>
                         <div style="margin-left: auto; display: flex; align-items: center; gap: 6px;">
-                            <span style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Next</span>
-                            <div id="pendingSceneIndicator" style="font-size: 11px; font-weight: 700; color: var(--warning); min-width: 16px; text-align: center;">—</div>
+                            <span style="font-size: 10px; color: var(--f-fg3); text-transform: uppercase; letter-spacing: 1px;">Next</span>
+                            <div id="pendingSceneIndicator" style="font-size: 11px; font-weight: 700; color: var(--f-warning); min-width: 16px; text-align: center;">—</div>
                         </div>
                     </div>
                     <!-- Row 2: Controls -->
                     <div style="display: flex; gap: 16px; align-items: flex-end; width: 100%;">
                         <div class="bpm-control">
                             <label>BPM</label>
-                            <input type="number" id="bpmInput" min="40" max="300" value="120" style="width: 100%; padding: 4px; background: var(--bg-control); border: 1px solid var(--border); color: var(--accent); border-radius: 2px; font-family: inherit; font-size: 14px;">
+                            <input type="number" id="bpmInput" min="40" max="300" value="120" style="width: 100%; padding: 4px; background: var(--f-bg3); border: 1px solid var(--f-stroke1); color: var(--f-brand); border-radius: var(--f-r2); font-family: inherit; font-size: 14px;">
                         </div>
                         <div class="swing-control">
                             <label>SWING</label>
                             <input type="range" id="swingSlider" min="0" max="100" value="0">
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px; min-width: 100px;">
-                            <label style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);">Steps</label>
-                            <select id="stepCountSelect" style="background: var(--bg-control); border: 1px solid var(--border); color: var(--text-primary); font-size: 13px; padding: 4px 6px; border-radius: 4px; font-family: inherit; cursor: pointer;">
+                            <label style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--f-fg3);">Steps</label>
+                            <select id="stepCountSelect" style="background: var(--f-bg3); border: 1px solid var(--f-stroke1); color: var(--f-fg1); font-size: 13px; padding: 4px 6px; border-radius: var(--f-r4); font-family: inherit; cursor: pointer;">
                                 <option value="8">8 — 2/4</option>
                                 <option value="12">12 — 3/4 / 6/8</option>
                                 <option value="16" selected>16 — 4/4</option>
@@ -1799,7 +1955,7 @@
                             </select>
                         </div>
                         <div class="sequencer-play" style="margin-left: auto;">
-                            <button id="seqClearBtn" title="Clear current sequence" style="color: var(--danger);">CLEAR</button>
+                            <button id="seqClearBtn" title="Clear current sequence" style="color: var(--f-danger);">CLEAR</button>
                             <button id="seqPlayBtn" class="transport-btn play" title="Play"><span class="t-icon">▶</span></button>
                             <button id="seqStopBtn" class="transport-btn stop" title="Stop"><span class="t-icon">■</span></button>
                             <button id="seqExportBtn" class="btn">Export</button>
@@ -1813,18 +1969,18 @@
         <!-- MULTI-TEMPO TAB -->
         <div id="multitempo-tab" class="tabs-content" style="grid-template-columns: 1fr; grid-template-rows: auto 1fr;">
             <!-- Multi-Tempo Controls Bar -->
-            <div class="transport-bar" style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);">
+            <div class="transport-bar" style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--f-stroke1);">
                 <button id="multiTempoPlayBtn" class="transport-btn play" title="Play"><span class="t-icon">▶</span></button>
                 <button id="multiTempoStopBtn" class="transport-btn stop" title="Stop"><span class="t-icon">■</span></button>
                 <button id="multiTempoRecBtn" class="transport-btn rec" title="Gravar para WAV"><span class="t-dot"></span>REC</button>
             </div>
 
             <!-- Multi-Tempo Cards Grid (6 colunas) -->
-            <div id="multiTempoGrid" style="display: grid; grid-template-columns: repeat(auto-fit, 240px); justify-content: center; align-content: safe center; gap: 20px; overflow: auto; padding: 32px; background: var(--bg-panel);"></div>
+            <div id="multiTempoGrid" style="display: grid; grid-template-columns: repeat(auto-fit, 240px); justify-content: center; align-content: safe center; gap: 20px; overflow: auto; padding: 32px; background: var(--f-bg2);"></div>
         </div>
 
         <!-- FOOTER: Keyboard QWERTY real com 2 linhas -->
-        <div class="footer" style="display: flex; flex-direction: column; padding: 8px 15px; gap: 6px; overflow: visible; background: var(--bg-panel); border-top: 1px solid var(--border); align-items: center; justify-content: center; height: auto;">
+        <div class="footer" style="display: flex; flex-direction: column; padding: 8px 15px; gap: 6px; overflow: visible; background: var(--f-bg2); border-top: 1px solid var(--f-stroke1); align-items: center; justify-content: center; height: auto;">
             <!-- Linha de cima: W E T Y U O P (sustenidos) -->
             <div id="keyboard-black" class="keyboard-black" style="display: flex; gap: 3px; justify-content: center; flex-wrap: wrap;"></div>
             <!-- Linha de baixo: A S D F G H J K L Ç ª (naturais) -->
@@ -1832,35 +1988,41 @@
         </div>
 
         <!-- CREDITS MODAL -->
-        <div id="creditsModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 9999; justify-content: center; align-items: center;">
-            <div style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 32px; max-width: 500px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);">
-                <div style="text-align: center; margin-bottom: 32px;">
-                    <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 8px; color: var(--accent);">Spliiice</h1>
-                    <p style="font-size: 14px; color: var(--text-secondary);">Professional Sample Slicer & 16-Step Sequencer</p>
+        <div id="creditsModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px); z-index: 9999; justify-content: center; align-items: center; animation: modal-fade-in var(--f-fast) var(--f-ease);">
+            <div style="background: var(--f-bg1); border: 1px solid var(--f-stroke1); border-radius: var(--f-r8); padding: var(--f-space-8); max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: var(--f-shadow28); animation: modal-slide-up var(--f-normal) var(--f-ease);">
+                <div style="text-align: center; margin-bottom: var(--f-space-8);">
+                    <h1 style="font-size: var(--f-text-3xl); font-weight: 700; margin-bottom: var(--f-space-2); color: var(--f-brand);">Spliiice</h1>
+                    <p style="font-size: var(--f-text-base); color: var(--f-fg3);">Professional Sample Slicer & 16-Step Sequencer</p>
                 </div>
 
-                <div style="border-top: 1px solid var(--border); padding-top: 24px; margin-bottom: 24px;">
-                    <p style="font-size: 14px; color: var(--text-primary); line-height: 1.6; margin-bottom: 12px;">
+                <div style="border-top: 1px solid var(--f-stroke1); padding-top: 24px; margin-bottom: 24px;">
+                    <p style="font-size: 14px; color: var(--f-fg1); line-height: 1.6; margin-bottom: 12px;">
                         <span style="font-weight: 600;">a David Marques design</span>
                     </p>
-                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
-                        vibe coded from scratch with <span style="color: var(--accent); font-weight: 500;">Claude.ai</span> as ideation and coding pal
+                    <p style="font-size: 13px; color: var(--f-fg3); line-height: 1.6; margin-bottom: 12px;">
+                        vibe coded from scratch with <span style="color: var(--f-brand); font-weight: 500;">Claude.ai</span> as ideation and coding pal
                     </p>
-                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                    <p style="font-size: 13px; color: var(--f-fg3); line-height: 1.6;">
                         MIT License
                     </p>
                 </div>
 
-                <div style="border-top: 1px solid var(--border); padding-top: 24px; margin-bottom: 24px; text-align: center;">
-                    <p style="font-size: 14px; color: var(--text-primary); margin-bottom: 16px;">
+                <div style="border-top: 1px solid var(--f-stroke1); padding-top: 24px; margin-bottom: 24px; text-align: center;">
+                    <p style="font-size: 14px; color: var(--f-fg1); margin-bottom: 16px;">
                         <span style="font-weight: 600;">a Monco.io product</span>
                     </p>
-                    <a href="https://ko-fi.com/dferreiramarques" target="_blank" style="display: inline-block; padding: 10px 20px; background: var(--accent); color: var(--bg-dark); text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 13px; transition: all 0.2s ease; cursor: pointer;">
+                    <a href="https://ko-fi.com/dferreiramarques" target="_blank" style="display: inline-block; padding: var(--f-space-2) var(--f-space-5); background: var(--f-brand); color: #fff; text-decoration: none; border-radius: var(--f-r4); font-weight: 600; font-size: var(--f-text-sm); transition: background var(--f-normal) var(--f-ease); cursor: pointer;">
                         ☕ Support on Ko-fi
                     </a>
                 </div>
 
-                <button onclick="document.getElementById('creditsModal').style.display = 'none';" style="width: 100%; margin-top: 32px; padding: 12px 16px; background: var(--accent); color: var(--bg-dark); border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">
+                <p style="text-align: center; font-size: var(--f-text-xs); color: var(--f-fg4); margin-bottom: var(--f-space-4);">
+                    vibe coded by <a href="https://www.linkedin.com/in/dferreiramarques/" target="_blank" style="color: var(--f-fg3);">David Marques</a>
+                    ·
+                    <a href="https://ko-fi.com/dferreiramarques" target="_blank" style="color: var(--f-fg3);">☕ ko-fi</a>
+                </p>
+
+                <button onclick="document.getElementById('creditsModal').style.display = 'none';" style="width: 100%; margin-top: var(--f-space-4); padding: var(--f-space-3) var(--f-space-4); background: var(--f-brand); color: #fff; border: none; border-radius: var(--f-r4); font-weight: 600; cursor: pointer; font-size: var(--f-text-base); transition: background var(--f-normal) var(--f-ease);">
                     Close
                 </button>
             </div>
@@ -1874,6 +2036,22 @@
         if (typeof JSZip === 'undefined') {
             window.JSZip = class { constructor() { throw new Error('JSZip not available'); } };
         }
+
+        // === TEMA CLARO/ESCURO ===
+        function applyThemeIcon() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const btn = document.getElementById('themeToggle');
+            if (btn) btn.textContent = current === 'dark' ? '🌙' : '☀️';
+        }
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            applyThemeIcon();
+        }
+        document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+        applyThemeIcon();
 
         // === CREDITS MODAL ===
         document.getElementById('appTitle')?.addEventListener('click', () => {
@@ -2095,7 +2273,7 @@
         function updateMultiTempoGrid() {
             const grid = document.getElementById('multiTempoGrid');
             if (!grid || !state.slices || state.slices.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--text-secondary);">Import audio and create slices to use Multi-Tempo</div>';
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--f-fg3);">Import audio and create slices to use Multi-Tempo</div>';
                 return;
             }
 
@@ -2118,7 +2296,7 @@
                 card.className = 'multitempo-card';
                 card.id = `multitempo-card-${idx}`;
                 card.style.borderLeft = `4px solid ${color}`;
-                card.style.background = `linear-gradient(to right, ${color}15, var(--bg-control))`;
+                card.style.background = `linear-gradient(to right, ${color}15, var(--f-bg3))`;
                 
                 card.innerHTML = `
                     <div class="multitempo-card-top">
@@ -2978,9 +3156,9 @@
             state.midiMode = 'trigger';
             const triggerBtn = document.getElementById('midiModeTrigger');
             const samplerBtn = document.getElementById('midiModeSampler');
-            triggerBtn.style.background = 'var(--accent)';
+            triggerBtn.style.background = 'var(--f-brand)';
             triggerBtn.style.color = '#fff';
-            triggerBtn.style.borderColor = 'var(--accent)';
+            triggerBtn.style.borderColor = 'var(--f-brand)';
             samplerBtn.style.background = '';
             samplerBtn.style.color = '';
             samplerBtn.style.borderColor = '';
@@ -2992,9 +3170,9 @@
             state.midiMode = 'sampler';
             const triggerBtn = document.getElementById('midiModeTrigger');
             const samplerBtn = document.getElementById('midiModeSampler');
-            samplerBtn.style.background = 'var(--accent)';
+            samplerBtn.style.background = 'var(--f-brand)';
             samplerBtn.style.color = '#fff';
-            samplerBtn.style.borderColor = 'var(--accent)';
+            samplerBtn.style.borderColor = 'var(--f-brand)';
             triggerBtn.style.background = '';
             triggerBtn.style.color = '';
             triggerBtn.style.borderColor = '';
@@ -3369,7 +3547,7 @@
                     </div>
                     <div class="slice-controls">
                         <button class="slice-btn-play" onclick="playSlice(${idx})">▶ PLAY</button>
-                        <button class="slice-btn-play" style="background: rgba(255, 51, 102, 0.2); border-color: var(--danger); color: var(--danger);" onclick="stopSlice(${idx})">■ STOP</button>
+                        <button class="slice-btn-play" style="background: rgba(255, 51, 102, 0.2); border-color: var(--f-danger); color: var(--f-danger);" onclick="stopSlice(${idx})">■ STOP</button>
                     </div>
                     <div class="slice-params">
                         <div class="param-slider">
@@ -3424,7 +3602,7 @@
                     </div>
                     <div class="slice-actions">
                         <button onclick="exportSlice(${idx})">Export</button>
-                        <button onclick="deleteSlice(${idx})" style="color: var(--danger); border-color: var(--danger);">Delete</button>
+                        <button onclick="deleteSlice(${idx})" style="color: var(--f-danger); border-color: var(--f-danger);">Delete</button>
                     </div>
                 `;
                 item.addEventListener('click', () => {
@@ -3727,10 +3905,10 @@
                         }
                     } else {
                         // No devices
-                        if (midiStatusDot) midiStatusDot.style.background = 'var(--warning)';
+                        if (midiStatusDot) midiStatusDot.style.background = 'var(--f-warning)';
                         if (midiStatusText) {
                             midiStatusText.textContent = 'MIDI: No devices';
-                            midiStatusText.style.color = 'var(--warning)';
+                            midiStatusText.style.color = 'var(--f-warning)';
                         }
                         if (midiDeviceInfo) midiDeviceInfo.textContent = 'Connect a MIDI device';
                     }
@@ -3751,10 +3929,10 @@
 
             } catch (err) {
                 console.log('MIDI not available:', err);
-                if (midiStatusDot) midiStatusDot.style.background = 'var(--danger)';
+                if (midiStatusDot) midiStatusDot.style.background = 'var(--f-danger)';
                 if (midiStatusText) {
                     midiStatusText.textContent = 'MIDI: Unavailable';
-                    midiStatusText.style.color = 'var(--danger)';
+                    midiStatusText.style.color = 'var(--f-danger)';
                 }
                 if (midiDeviceInfo) midiDeviceInfo.textContent = 'Web MIDI not supported';
             }
@@ -3837,8 +4015,8 @@
             // Visual feedback - flash status dot
             const midiStatusDot = document.getElementById('midiStatusDot');
             if (midiStatusDot) {
-                midiStatusDot.style.background = 'var(--accent)';
-                midiStatusDot.style.boxShadow = '0 0 8px var(--accent)';
+                midiStatusDot.style.background = 'var(--f-brand)';
+                midiStatusDot.style.boxShadow = '0 0 8px var(--f-brand)';
                 setTimeout(() => {
                     midiStatusDot.style.background = '#22c55e';
                     midiStatusDot.style.boxShadow = 'none';
@@ -3981,7 +4159,7 @@
         // === STEP SEQUENCER ===
         function initSequencerGrid() {
             if (!state.audioBuffer || state.slices.length === 0) {
-                document.getElementById('sequencerGrid').innerHTML = '<div style="padding: 20px; color: var(--text-secondary); text-align: center;">Load sample and create slices to use sequencer</div>';
+                document.getElementById('sequencerGrid').innerHTML = '<div style="padding: 20px; color: var(--f-fg3); text-align: center;">Load sample and create slices to use sequencer</div>';
                 return;
             }
 
@@ -4054,8 +4232,8 @@
                     
                     if (state_val === 'trigger') {
                         stepBtn.classList.add('active'); // Green
-                        stepBtn.style.background = 'var(--accent)';
-                        stepBtn.style.borderColor = 'var(--accent)';
+                        stepBtn.style.background = 'var(--f-brand)';
+                        stepBtn.style.borderColor = 'var(--f-brand)';
                     } else if (state_val === 'flame') {
                         stepBtn.classList.add('flame'); // Magenta
                         stepBtn.style.background = '#ff00ff';
@@ -4069,8 +4247,8 @@
                         
                         if (current === 'empty') {
                             next = 'trigger';
-                            stepBtn.style.background = 'var(--accent)';
-                            stepBtn.style.borderColor = 'var(--accent)';
+                            stepBtn.style.background = 'var(--f-brand)';
+                            stepBtn.style.borderColor = 'var(--f-brand)';
                             stepBtn.classList.add('active');
                             stepBtn.classList.remove('flame');
                         } else if (current === 'trigger') {
@@ -4081,8 +4259,8 @@
                             stepBtn.classList.add('flame');
                         } else { // flame
                             next = 'empty';
-                            stepBtn.style.background = 'var(--bg-panel)';
-                            stepBtn.style.borderColor = 'var(--border)';
+                            stepBtn.style.background = 'var(--f-bg2)';
+                            stepBtn.style.borderColor = 'var(--f-stroke1)';
                             stepBtn.classList.remove('active');
                             stepBtn.classList.remove('flame');
                         }
@@ -4139,33 +4317,33 @@
                                       );
                 
                 // Color logic:
-                // - Current scene: Orange (--warning)
+                // - Current scene: Orange (--f-warning)
                 // - Pending scene: Blue with glow (animado)
                 // - Filled scene (not current/pending): Blue
-                // - Empty scene: Dark grey (--bg-control)
+                // - Empty scene: Dark grey (--f-bg3)
                 if (i === state.currentScene) {
                     // Active scene - Orange
-                    btn.style.background = 'var(--warning)';
-                    btn.style.borderColor = 'var(--warning)';
+                    btn.style.background = 'var(--f-warning)';
+                    btn.style.borderColor = 'var(--f-warning)';
                     btn.style.color = '#000';
                     btn.style.boxShadow = 'none';
                 } else if (i === state.pendingScene) {
                     // Pending scene - Blue with glow
-                    btn.style.background = 'var(--accent)';
-                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.background = 'var(--f-brand)';
+                    btn.style.borderColor = 'var(--f-brand)';
                     btn.style.color = '#fff';
                     btn.style.boxShadow = '0 0 15px rgba(99, 102, 241, 0.8), inset 0 0 8px rgba(99, 102, 241, 0.3)';
                 } else if (hasPatternData) {
                     // Filled but not active/pending - Blue
-                    btn.style.background = 'var(--accent)';
-                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.background = 'var(--f-brand)';
+                    btn.style.borderColor = 'var(--f-brand)';
                     btn.style.color = '#fff';
                     btn.style.boxShadow = 'none';
                 } else {
                     // Empty - Dark grey
-                    btn.style.background = 'var(--bg-control)';
-                    btn.style.borderColor = 'var(--border)';
-                    btn.style.color = 'var(--text-secondary)';
+                    btn.style.background = 'var(--f-bg3)';
+                    btn.style.borderColor = 'var(--f-stroke1)';
+                    btn.style.color = 'var(--f-fg3)';
                     btn.style.boxShadow = 'none';
                 }
             });
@@ -4561,9 +4739,9 @@
             clearTimeout(state.sequencerIntervalId);
             document.getElementById('seqPlayBtn').classList.remove('active');
             const scenePlayBtn = document.getElementById('scenePlayBtn');
-            scenePlayBtn.style.background = 'var(--bg-control)';
-            scenePlayBtn.style.borderColor = 'var(--border)';
-            scenePlayBtn.style.color = 'var(--text-secondary)';
+            scenePlayBtn.style.background = 'var(--f-bg3)';
+            scenePlayBtn.style.borderColor = 'var(--f-stroke1)';
+            scenePlayBtn.style.color = 'var(--f-fg3)';
             document.querySelectorAll('.sequencer-step').forEach(step => {
                 step.classList.remove('playing');
             });
@@ -4601,8 +4779,8 @@
             
             // Update button state
             const scenePlayBtn = document.getElementById('scenePlayBtn');
-            scenePlayBtn.style.background = 'var(--accent)';
-            scenePlayBtn.style.borderColor = 'var(--accent)';
+            scenePlayBtn.style.background = 'var(--f-brand)';
+            scenePlayBtn.style.borderColor = 'var(--f-brand)';
             scenePlayBtn.style.color = '#fff';
         }
 
