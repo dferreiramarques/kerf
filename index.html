@@ -95,6 +95,8 @@
 
             /* Aliases legados usados no resto do CSS (ver secção "efeitos") */
             --grid-color: var(--f-bg3);
+            --f-effects-bg: linear-gradient(180deg, #f2f2f5 0%, #e2e2e7 100%);
+            --f-effects-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12);
         }
 
         /* Dark theme (default para o Spliiice — instrumento de estúdio) */
@@ -121,6 +123,8 @@
             --f-danger:  #f1707b;
 
             --grid-color: #1e293b;
+            --f-effects-bg: linear-gradient(180deg, #15191f 0%, #0a0d12 100%);
+            --f-effects-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
         [data-theme="light"] {
@@ -145,6 +149,8 @@
             --f-danger:  #c50f1f;
 
             --grid-color: var(--f-bg3);
+            --f-effects-bg: linear-gradient(180deg, #f2f2f5 0%, #e2e2e7 100%);
+            --f-effects-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12);
         }
 
         body {
@@ -1802,7 +1808,7 @@
                     </div>
                 </div>
                 <!-- EFFECTS RACK - Pedais skeuomórficos com knobs -->
-                <div class="effects-panel" style="grid-template-columns: repeat(5, 1fr); padding: 12px 10px; gap: 10px; min-height: 170px; max-height: 170px; overflow: visible; background: linear-gradient(180deg, #15191f 0%, #0a0d12 100%); border-radius: var(--f-r6); box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);">
+                <div class="effects-panel" style="grid-template-columns: repeat(5, 1fr); padding: 12px 10px; gap: 10px; min-height: 170px; max-height: 170px; overflow: visible; background: var(--f-effects-bg); border-radius: var(--f-r6); box-shadow: var(--f-effects-shadow);">
                     
                     <!-- COMPRESSOR PEDAL -->
                     <div class="pedal purple" id="compPedal">
@@ -2053,6 +2059,8 @@
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
             applyThemeIcon();
+            // Recalcula as cores do "ecrã" da waveform para o novo tema
+            if (typeof drawWaveform === 'function') drawWaveform();
         }
         document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
         applyThemeIcon();
@@ -2617,6 +2625,23 @@
         const canvas = document.getElementById('waveform');
         const canvasCtx = canvas.getContext('2d');
 
+        // Paleta da waveform — inverte com o tema (ecrã escuro/traço claro no dark,
+        // ecrã claro/traço escuro no light), mantendo sempre bom contraste.
+        function getWaveformPalette() {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            return isLight ? {
+                bg: '#eceef2',
+                fillEdge: 'rgba(30, 32, 46, 0.9)',
+                fillMid: 'rgba(30, 32, 46, 0.5)',
+                zeroLine: 'rgba(30, 32, 46, 0.25)'
+            } : {
+                bg: '#0b0e14',
+                fillEdge: 'rgba(240, 242, 255, 0.95)',
+                fillMid: 'rgba(240, 242, 255, 0.55)',
+                zeroLine: 'rgba(226, 230, 255, 0.25)'
+            };
+        }
+
         function drawWaveform() {
             if (!state.audioBuffer) return;
 
@@ -2640,8 +2665,8 @@
             // 🆕 CSS width para o scroll horizontal funcionar no container
             canvas.style.width = canvasWidth + 'px';
 
-            // Background — "ecrã" escuro fixo (como o rack de efeitos), sempre alto contraste
-            canvasCtx.fillStyle = '#0b0e14';
+            // Background — "ecrã" que inverte com o tema, sempre alto contraste
+            canvasCtx.fillStyle = getWaveformPalette().bg;
             canvasCtx.fillRect(0, 0, canvasWidth, height);
 
             // 🆕 Renderiza a waveform na largura total (com zoom)
@@ -2668,11 +2693,21 @@
 
             if (!peaks || peaks.length === 0) return;
 
-            // === FILL AREA (waveform real — peaks) ===
+            const palette = getWaveformPalette();
+
+            // === LINHA DO ZERO — referência fixa, sempre visível ===
+            canvasCtx.strokeStyle = palette.zeroLine;
+            canvasCtx.lineWidth = 1;
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(0, height / 2);
+            canvasCtx.lineTo(canvasWidth, height / 2);
+            canvasCtx.stroke();
+
+            // === FILL AREA (waveform — peaks) ===
             const gradient = canvasCtx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, 'rgba(226, 230, 255, 0.9)');
-            gradient.addColorStop(0.5, 'rgba(226, 230, 255, 0.5)');
-            gradient.addColorStop(1, 'rgba(226, 230, 255, 0.9)');
+            gradient.addColorStop(0, palette.fillEdge);
+            gradient.addColorStop(0.5, palette.fillMid);
+            gradient.addColorStop(1, palette.fillEdge);
 
             canvasCtx.fillStyle = gradient;
             canvasCtx.beginPath();
@@ -2698,44 +2733,6 @@
 
             canvasCtx.closePath();
             canvasCtx.fill();
-
-            // === RMS ENVELOPE ===
-            // Nota: não desenhamos nada abaixo de SILENCE_THRESHOLD — sem isto, a linha
-            // do topo e a linha de baixo colapsam ambas em height/2 nos trechos silenciosos,
-            // o que parece uma "linha de média" no meio da waveform mas não é um elemento
-            // com propósito próprio, é só o envelope RMS achatado. Cortamos o traço aí para
-            // só mostrar linha onde há sinal real.
-            const SILENCE_THRESHOLD = 0.02;
-            canvasCtx.strokeStyle = 'rgba(129, 140, 248, 0.55)';
-            canvasCtx.lineWidth = 1;
-
-            // Top line
-            canvasCtx.beginPath();
-            let topActive = false;
-            for (let x = 0; x < canvasWidth; x++) {
-                const peakIdx = Math.floor((x / canvasWidth) * peaks.length);
-                const peak = peaks[Math.min(peakIdx, peaks.length - 1)];
-                const rms = peak ? peak.rms * masterVolume : 0;
-                if (rms < SILENCE_THRESHOLD) { topActive = false; continue; }
-                const y = height / 2 - (rms * height / 2);
-                if (!topActive) { canvasCtx.moveTo(x, y); topActive = true; }
-                else canvasCtx.lineTo(x, y);
-            }
-            canvasCtx.stroke();
-
-            // Bottom line
-            canvasCtx.beginPath();
-            let bottomActive = false;
-            for (let x = 0; x < canvasWidth; x++) {
-                const peakIdx = Math.floor((x / canvasWidth) * peaks.length);
-                const peak = peaks[Math.min(peakIdx, peaks.length - 1)];
-                const rms = peak ? peak.rms * masterVolume : 0;
-                if (rms < SILENCE_THRESHOLD) { bottomActive = false; continue; }
-                const y = height / 2 + (rms * height / 2);
-                if (!bottomActive) { canvasCtx.moveTo(x, y); bottomActive = true; }
-                else canvasCtx.lineTo(x, y);
-            }
-            canvasCtx.stroke();
         }
 
         // Fallback: renderizar direto do áudio (antigo)
@@ -2745,40 +2742,18 @@
             const samples = Math.floor(rawData.length / downsample);
 
             const masterVolume = parseFloat(document.getElementById('masterVolume').value);
+            const palette = getWaveformPalette();
 
-            // === RMS ENVELOPE ===
-            const SILENCE_THRESHOLD_DIRECT = 0.02;
-            canvasCtx.strokeStyle = 'rgba(129, 140, 248, 0.55)';
+            // === LINHA DO ZERO — referência fixa, sempre visível ===
+            canvasCtx.strokeStyle = palette.zeroLine;
             canvasCtx.lineWidth = 1;
             canvasCtx.beginPath();
-            let directActive = false;
-
-            const rmsWindow = Math.max(128, Math.floor(downsample * 4));
-
-            for (let i = 0; i < samples; i += Math.max(1, Math.floor(samples / width))) {
-                let rms = 0;
-                let count = 0;
-
-                for (let j = i; j < Math.min(i + rmsWindow, samples); j++) {
-                    const idx = Math.floor(j * downsample);
-                    if (idx < rawData.length) {
-                        const val = rawData[idx] * masterVolume;
-                        rms += val * val;
-                        count++;
-                    }
-                }
-                rms = Math.sqrt(rms / Math.max(1, count));
-
-                const x = (i / samples) * width;
-                if (rms < SILENCE_THRESHOLD_DIRECT) { directActive = false; continue; }
-                const y = height / 2 - (rms * height / 2);
-                if (!directActive) { canvasCtx.moveTo(x, y); directActive = true; }
-                else canvasCtx.lineTo(x, y);
-            }
+            canvasCtx.moveTo(0, height / 2);
+            canvasCtx.lineTo(width, height / 2);
             canvasCtx.stroke();
 
             // === Mini waveform (peaks) ===
-            canvasCtx.strokeStyle = 'rgba(226, 230, 255, 0.85)';
+            canvasCtx.strokeStyle = palette.fillEdge;
             canvasCtx.lineWidth = 0.5;
 
             for (let x = 0; x < width; x++) {
