@@ -3,8 +3,7 @@
 
 const CACHE_NAME = 'kerf-v1';
 const urlsToCache = [
-  './',
-  './index.html',
+  './kerf.html',
   './manifest.json'
 ];
 

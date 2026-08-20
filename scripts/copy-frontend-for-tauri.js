@@ -9,14 +9,18 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'src-tauri', 'dist');
 
-const FILES = ['index.html', 'manifest.json'];
+// Tauri espera um index.html dentro de frontendDist; o PWA vive em
+// kerf.html na raiz do repo (index.html aí é a landing page de marketing).
+const RENAMES = { 'kerf.html': 'index.html' };
+const FILES = ['kerf.html', 'manifest.json'];
 const DIRS = ['vendor'];
 
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST, { recursive: true });
 
 for (const file of FILES) {
-    fs.copyFileSync(path.join(ROOT, file), path.join(DIST, file));
+    const destName = RENAMES[file] || file;
+    fs.copyFileSync(path.join(ROOT, file), path.join(DIST, destName));
 }
 
 for (const dir of DIRS) {

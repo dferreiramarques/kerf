@@ -2,7 +2,7 @@
   "name": "Kerf — Professional Sample Slicer",
   "short_name": "Kerf",
   "description": "Professional browser-based sample slicer and 16-step sequencer with effects chain",
-  "start_url": "./index.html",
+  "start_url": "./kerf.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#141414",
@@ -35,7 +35,7 @@
       "name": "New Project",
       "short_name": "New",
       "description": "Create a new sample slicing project",
-      "url": "./index.html",
+      "url": "./kerf.html",
       "icons": [
         {
           "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>+</text></svg>",

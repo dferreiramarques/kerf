@@ -25,9 +25,13 @@ A browser-based sample slicer and 16-step sequencer with effects chain, built wi
 
 ### Desktop (PWA)
 
-1. Open **index.html** in a modern browser (Chrome, Edge, Firefox, Safari)
+1. Open **kerf.html** in a modern browser (Chrome, Edge, Firefox, Safari) — or visit [kerf.monco.io/kerf.html](https://kerf.monco.io/kerf.html)
 2. Click the **Install** button (usually in the address bar) or use the browser menu
-3. Spliiice will install as a native desktop app
+3. Kerf will install as a native desktop app
+
+### Desktop (Windows installer)
+
+Download the native Windows build from [kerf.monco.io](https://kerf.monco.io) — no browser required.
 
 ### Local Development
 
@@ -111,10 +115,12 @@ npx http-server
 ## Project Structure
 
 ```
-spliiice/
-├── index.html           # Main app (PWA entry point)
+kerf/
+├── index.html           # Product/landing page (kerf.monco.io)
+├── kerf.html             # The app itself (PWA entry point)
 ├── manifest.json        # PWA configuration
 ├── service-worker.js    # Offline support
+├── downloads/            # Windows installer builds (.exe / .msi)
 └── README.md           # This file
 ```
 
