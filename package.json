@@ -22,7 +22,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dferreiramarques/spliiice.git"
+    "url": "https://github.com/dferreiramarques/kerf.git"
   },
   "homepage": "https://kerf.monco.io",
   "dependencies": {
