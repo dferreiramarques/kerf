@@ -89,22 +89,24 @@ npx http-server
 
 ## Effects
 
-### Reverb
-- **Mix**: Dry (0%) to Wet (100%) blend
-- Default: 0% (off)
+Chained in this order: Compressor → Decimator → Overdrive → Reverb.
 
 ### Compressor
-- **Attack**: Time to react to signal (ms)
-- **Release**: Time to recover (ms)
-- **Ratio**: Compression amount
+- **Ratio**: Compression amount (1.0–8.0)
+- **Mix**: Dry to wet blend
+
+### Decimator
+- **Depth**: Bit depth, 2–16 bits (lower = more degradation)
+- **Mix**: Dry to wet blend
 
 ### Overdrive
 - **Drive**: Amount of saturation
-- **Tone**: Filter character
+- **Mix**: Dry to wet blend
 
-### Decimator
-- **Bit Depth**: 8-16 bits (lower = more degradation)
-- **Sample Rate**: Reduction multiplier
+### Reverb
+- **Mode**: Short or Long
+- **Mix**: Dry (0%) to Wet (100%) blend
+- Default: 0% (off)
 
 ## File Export
 
