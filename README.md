@@ -11,11 +11,11 @@ A browser-based sample slicer and 16-step sequencer with effects chain, built wi
   - **Trigger Mode**: Each MIDI note triggers a different slice
   - **Sampler Mode**: Play a selected slice at different pitches (piano layout)
 - 🎵 **16-Step Sequencer** - Pattern-based playback with scene management
-- 📊 **Multi-Effects Chain**
-  - Reverb (wet/dry mix control)
-  - Compressor (attack, release, ratio)
-  - Overdrive (drive, tone)
-  - Decimator (bit depth reduction)
+- 📊 **Multi-Effects Chain** (Compressor → Decimator → Overdrive → Reverb)
+  - Compressor (ratio, mix)
+  - Decimator (bit depth, mix)
+  - Overdrive (drive, mix)
+  - Reverb (mode, mix)
 - 💾 **Project Save/Load** - Export and import projects as ZIP files
 - 📁 **WAV Export** - Export individual slices or full audio
 - 🎨 **Vibe-Coded** - Built from scratch with Claude.ai
