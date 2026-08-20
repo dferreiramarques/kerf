@@ -37,7 +37,7 @@ Download the native Windows build from [kerf.monco.io](https://kerf.monco.io) â€
 
 ```bash
 # Clone or download this repository
-cd spliiice
+cd kerf
 
 # Serve locally (required for service worker)
 # Python 3
