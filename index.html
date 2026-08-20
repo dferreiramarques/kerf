@@ -14,12 +14,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="Professional browser-based sample slicer and 16-step sequencer with effects chain">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>S</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>S</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>K</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>K</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <title>Spliiice — Sample Slicer</title>
+    <title>Kerf — Sample Slicer</title>
     <style>
         * {
             margin: 0;
@@ -44,7 +44,7 @@
             --f-stroke1: #d1d1d1;
             --f-stroke2: #e0e0e0;
 
-            /* Brand — cor original do Spliiice, mantida */
+            /* Brand — cor original do Spliiice, mantida no rebrand para Kerf */
             --f-brand:     #6366f1;
             --f-brand-h:   #818cf8;
             --f-brand-a:   #4f46e5;
@@ -99,7 +99,7 @@
             --f-effects-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12);
         }
 
-        /* Dark theme (default para o Spliiice — instrumento de estúdio) */
+        /* Dark theme (default para o Kerf — instrumento de estúdio) */
         :root,
         [data-theme="dark"] {
             --f-bg1:     #141414;
@@ -1702,7 +1702,7 @@
     <div class="container">
         <!-- HEADER -->
         <header>
-            <div class="header-title" id="appTitle" style="cursor: pointer;">Spliiice</div>
+            <div class="header-title" id="appTitle" style="cursor: pointer;">Kerf<span style="font-size: 9px; opacity: 0.5; font-weight: normal; vertical-align: super; margin-left: 2px;">v0.1.0</span></div>
             <div class="header-controls">
                 <span style="font-size: 14px; color: var(--f-fg3);">
                     <span id="sliceCount">0</span> slices
@@ -2001,7 +2001,7 @@
         <div id="creditsModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px); z-index: 9999; justify-content: center; align-items: center; animation: modal-fade-in var(--f-fast) var(--f-ease);">
             <div style="background: var(--f-bg1); border: 1px solid var(--f-stroke1); border-radius: var(--f-r8); padding: var(--f-space-8); max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: var(--f-shadow28); animation: modal-slide-up var(--f-normal) var(--f-ease);">
                 <div style="text-align: center; margin-bottom: var(--f-space-8);">
-                    <h1 style="font-size: var(--f-text-3xl); font-weight: 700; margin-bottom: var(--f-space-2); color: var(--f-brand);">Spliiice</h1>
+                    <h1 style="font-size: var(--f-text-3xl); font-weight: 700; margin-bottom: var(--f-space-2); color: var(--f-brand);">Kerf</h1>
                     <p style="font-size: var(--f-text-base); color: var(--f-fg3);">Professional Sample Slicer & 16-Step Sequencer</p>
                 </div>
 
@@ -2040,11 +2040,66 @@
 
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" onerror="console.warn('JSZip not loaded')"></script>
+    <script src="vendor/jszip.min.js" onerror="console.warn('JSZip not loaded')"></script>
+    <!-- Bundle dos JS guests de @tauri-apps/plugin-dialog e @tauri-apps/plugin-fs.
+         Estes pacotes só existem como ES module (sem build UMD/global), por isso são
+         pré-bundlados com esbuild (npm run build:vendor-plugins) em vez de importados
+         diretamente — mantém o projeto sem build step em runtime. Fora do Tauri este
+         script não faz nada até alguma função o chamar, e isso nunca acontece (guardado
+         por kerfIsTauri). -->
+    <script src="vendor/tauri-plugins.js" onerror="console.warn('Tauri plugins bundle not loaded')"></script>
     <script>
         // Fallback se JSZip não carregar
         if (typeof JSZip === 'undefined') {
             window.JSZip = class { constructor() { throw new Error('JSZip not available'); } };
+        }
+
+        // === NATIVE FILE I/O (Tauri) ===
+        // Fora do Tauri (PWA em kerf.monco.io) usa-se sempre o mecanismo do browser
+        // (<a download>, <input type=file>). Dentro do Tauri usam-se diálogos nativos
+        // via os plugins @tauri-apps/plugin-dialog + @tauri-apps/plugin-fs (expostos
+        // globalmente em window.__TAURI__ graças a "withGlobalTauri" no tauri.conf.json).
+        const kerfIsTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+        async function saveBlobToFile(blob, suggestedName, filters) {
+            if (kerfIsTauri) {
+                try {
+                    const path = await window.__TAURI_PLUGINS__.dialog.save({ defaultPath: suggestedName, filters });
+                    if (!path) return false; // utilizador cancelou
+                    const bytes = new Uint8Array(await blob.arrayBuffer());
+                    await window.__TAURI_PLUGINS__.fs.writeFile(path, bytes);
+                    return true;
+                } catch (err) {
+                    console.error('saveBlobToFile error:', err);
+                    alert('Erro ao guardar o ficheiro: ' + err);
+                    return false;
+                }
+            }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = suggestedName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            return true;
+        }
+
+        // Devolve { name, arrayBuffer } ou null se o utilizador cancelou.
+        // Só deve ser chamado quando kerfIsTauri === true.
+        async function openFileViaDialog(filters) {
+            try {
+                const path = await window.__TAURI_PLUGINS__.dialog.open({ multiple: false, filters });
+                if (!path) return null;
+                const bytes = await window.__TAURI_PLUGINS__.fs.readFile(path);
+                const name = path.split(/[\\/]/).pop();
+                return { name, arrayBuffer: bytes.buffer };
+            } catch (err) {
+                console.error('openFileViaDialog error:', err);
+                alert('Erro ao abrir o ficheiro: ' + err);
+                return null;
+            }
         }
 
         // === TEMA CLARO/ESCURO ===
@@ -2377,20 +2432,15 @@
         }
 
         // === FILE LOADING ===
-        document.getElementById('audioFile').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const arrayBuffer = await file.arrayBuffer();
+        async function loadAudioFromArrayBuffer(arrayBuffer, filename) {
             const ctx = initAudioContext();
-            
             try {
                 state.audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-                
+
                 // 🆕 Gerar cache de waveform para zoom elástico
                 state.waveformCache = generateWaveformCache(state.audioBuffer);
-                
-                updateSampleInfo(file.name);
+
+                updateSampleInfo(filename);
                 drawWaveform();
                 state.slices = [];
                 updateSlicesList();
@@ -2398,6 +2448,26 @@
             } catch (err) {
                 console.error('Audio decode error:', err);
             }
+        }
+
+        document.getElementById('audioFile').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const arrayBuffer = await file.arrayBuffer();
+            await loadAudioFromArrayBuffer(arrayBuffer, file.name);
+        });
+
+        // Dentro do Tauri o <input type=file> não abre um diálogo nativo com acesso
+        // total ao filesystem (fica limitado ao sandbox do webview), por isso a label
+        // que o ativa é interceptada para usar o plugin dialog + fs em vez disso.
+        document.querySelector('label[for="audioFile"]').addEventListener('click', async (e) => {
+            if (!kerfIsTauri) return;
+            e.preventDefault();
+            const result = await openFileViaDialog([
+                { name: 'Audio', extensions: ['wav', 'mp3', 'ogg', 'flac', 'm4a', 'aac'] }
+            ]);
+            if (!result) return;
+            await loadAudioFromArrayBuffer(result.arrayBuffer, result.name);
         });
 
         // DELETE SAMPLE BUTTON
@@ -3870,6 +3940,13 @@
         });
 
         // === MIDI SUPPORT ===
+        // navigator.requestMIDIAccess() é nativo em Chromium/WebView2 (Windows), mas
+        // não existe em WebKit (Safari/macOS, WebKitGTK/Linux). Dentro do Tauri isto
+        // é resolvido pelo plugin tauri-plugin-midi: ele injeta um polyfill no webview
+        // (via js_init_script, antes deste script correr) que substitui
+        // navigator.requestMIDIAccess por uma implementação apoiada em Rust/midir
+        // (WinMM, CoreMIDI, ALSA) — por isso não há aqui nenhum ramo kerfIsTauri: a mesma
+        // chamada funciona nativamente nas três plataformas de desktop.
         async function initMIDI() {
             const midiStatusDot = document.getElementById('midiStatusDot');
             const midiStatusText = document.getElementById('midiStatusText');
@@ -4548,22 +4625,21 @@
         }
 
         // Prompt para guardar o WAV
-        function promptDownloadWAV(blob) {
+        async function promptDownloadWAV(blob) {
             const now = new Date();
             const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
-            const defaultName = `spliiice_multitempo_${stamp}.wav`;
-            const fileName = prompt('Nome do ficheiro WAV:', defaultName);
-            if (fileName === null) return; // cancelou
+            const defaultName = `kerf_multitempo_${stamp}.wav`;
 
-            const finalName = fileName.toLowerCase().endsWith('.wav') ? fileName : fileName + '.wav';
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = finalName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            // Dentro do Tauri o próprio diálogo nativo "Guardar como" já deixa escolher
+            // nome e destino, por isso o prompt() de texto só faz sentido fora dele.
+            let finalName = defaultName;
+            if (!kerfIsTauri) {
+                const fileName = prompt('Nome do ficheiro WAV:', defaultName);
+                if (fileName === null) return; // cancelou
+                finalName = fileName.toLowerCase().endsWith('.wav') ? fileName : fileName + '.wav';
+            }
+
+            await saveBlobToFile(blob, finalName, [{ name: 'WAV Audio', extensions: ['wav'] }]);
         }
 
         // 🆕 Look-ahead scheduler: relógio de áudio (ctx.currentTime), agenda à frente.
@@ -4970,16 +5046,9 @@
             return arraybuffer;
         }
 
-        function downloadWAV(arraybuffer, filename) {
+        async function downloadWAV(arraybuffer, filename) {
             const blob = new Blob([arraybuffer], { type: 'audio/wav' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            await saveBlobToFile(blob, filename, [{ name: 'WAV Audio', extensions: ['wav'] }]);
         }
 
         function exportSlice(sliceIdx) {
@@ -5079,24 +5148,26 @@
             zip.file('project.json', JSON.stringify(projectData, null, 2));
 
             const content = await zip.generateAsync({ type: 'blob' });
-            const url = URL.createObjectURL(content);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `slicer_project_${Date.now()}.zip`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            await saveBlobToFile(content, `slicer_project_${Date.now()}.zip`, [{ name: 'Kerf Project', extensions: ['zip'] }]);
         }
 
         async function loadProject() {
+            if (kerfIsTauri) {
+                const result = await openFileViaDialog([{ name: 'Kerf Project', extensions: ['zip'] }]);
+                if (!result) return;
+                await loadProjectFromBlob(new Blob([result.arrayBuffer]));
+                return;
+            }
             document.getElementById('projectFile').click();
         }
 
         document.getElementById('projectFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            await loadProjectFromBlob(file);
+        });
 
+        async function loadProjectFromBlob(file) {
             try {
                 const zip = await JSZip.loadAsync(file);
                 
@@ -5186,7 +5257,7 @@
                 console.error('Load error:', err);
                 alert('Error loading project: ' + err.message);
             }
-        });
+        }
 
         // === AUDIO RECORDING ===
         async function startRecording() {
@@ -5276,6 +5347,7 @@
                                 (decodedBuffer) => {
                                     console.log('✅ Audio decoded. Duration:', decodedBuffer.duration);
                                     state.audioBuffer = decodedBuffer;
+                                    state.waveformCache = generateWaveformCache(state.audioBuffer);
 
                                     updateSampleInfo('rec_' + Date.now() + '.wav');
                                     state.slices = [];
@@ -5448,7 +5520,11 @@
         });
 
         // === SERVICE WORKER (PWA) ===
-        if ('serviceWorker' in navigator) {
+        // Dentro do wrapper Tauri (app desktop) não há necessidade de service worker —
+        // os assets já vêm empacotados localmente. window.__TAURI_INTERNALS__ é injetado
+        // pelo Tauri em qualquer configuração (com ou sem withGlobalTauri).
+        // (kerfIsTauri já foi declarado mais acima, na secção NATIVE FILE I/O)
+        if (!kerfIsTauri && 'serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js', { scope: '/' })
                 .then((registration) => {
                     console.log('Service Worker registered:', registration);

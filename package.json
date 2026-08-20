@@ -1,12 +1,14 @@
 {
-  "name": "spliiice",
+  "name": "kerf",
   "version": "1.0.0",
-  "description": "Professional browser-based sample slicer and 16-step sequencer with effects chain",
+  "description": "Kerf — professional browser-based sample slicer and 16-step sequencer with effects chain (anteriormente Spliiice)",
   "main": "index.html",
   "scripts": {
     "start": "http-server -p 8000 -o",
     "serve": "http-server -p 8000",
-    "dev": "http-server -p 8000 -c-1"
+    "dev": "http-server -p 8000 -c-1",
+    "tauri": "tauri",
+    "build:vendor-plugins": "esbuild scripts/tauri-plugins-entry.js --bundle --format=iife --outfile=vendor/tauri-plugins.js"
   },
   "keywords": [
     "audio",
@@ -20,10 +22,16 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dmarques/spliiice.git"
+    "url": "https://github.com/dferreiramarques/spliiice.git"
   },
-  "homepage": "https://spliiice.monco.io",
+  "homepage": "https://kerf.monco.io",
+  "dependencies": {
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-fs": "^2"
+  },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "esbuild": "^0.28.2",
     "http-server": "^14.1.1"
   },
   "engines": {

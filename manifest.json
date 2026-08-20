@@ -1,6 +1,6 @@
 {
-  "name": "Spliiice — Professional Sample Slicer",
-  "short_name": "Spliiice",
+  "name": "Kerf — Professional Sample Slicer",
+  "short_name": "Kerf",
   "description": "Professional browser-based sample slicer and 16-step sequencer with effects chain",
   "start_url": "./index.html",
   "scope": "./",
@@ -10,13 +10,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>S</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>K</text></svg>",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>S</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0a0a' width='192' height='192'/><text x='96' y='130' font-family='Consolas, monospace' font-size='140' font-weight='bold' fill='%236366f1' text-anchor='middle'>K</text></svg>",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
@@ -24,7 +24,7 @@
   ],
   "screenshots": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%230f1419' width='540' height='720'/><text x='270' y='360' font-family='Consolas, monospace' font-size='120' font-weight='bold' fill='%236366f1' text-anchor='middle'>Spliiice</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%230f1419' width='540' height='720'/><text x='270' y='360' font-family='Consolas, monospace' font-size='120' font-weight='bold' fill='%236366f1' text-anchor='middle'>Kerf</text></svg>",
       "sizes": "540x720",
       "type": "image/svg+xml",
       "form_factor": "narrow"
