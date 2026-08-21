@@ -1,4 +1,4 @@
-# Spliiice — Professional Sample Slicer & Sequencer
+# Kerf — Professional Sample Slicer & Sequencer
 
 A browser-based sample slicer and 16-step sequencer with effects chain, built with ethical AI as a core philosophy.
 
