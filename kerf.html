@@ -1697,6 +1697,98 @@
             from { opacity: 0; transform: translateY(12px); }
             to   { opacity: 1; transform: none; }
         }
+
+        /* === PRODUCT TOUR (wizard de primeira utilização) === */
+        #tourBtn { font-weight: 700; font-size: var(--f-text-base); }
+
+        .kt-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            /* Bloqueia cliques na app enquanto o tour está aberto */
+        }
+        .kt-overlay.kt-plain { background: rgba(0, 0, 0, 0.62); backdrop-filter: blur(2px); }
+
+        /* A "sombra" gigante escurece tudo menos o retângulo destacado */
+        .kt-spot {
+            position: fixed;
+            border-radius: var(--f-r8);
+            box-shadow: 0 0 0 2px var(--f-brand), 0 0 0 9999px rgba(0, 0, 0, 0.62);
+            pointer-events: none;
+            transition: top var(--f-slow) var(--f-ease), left var(--f-slow) var(--f-ease),
+                        width var(--f-slow) var(--f-ease), height var(--f-slow) var(--f-ease);
+        }
+        .kt-plain .kt-spot { display: none; }
+
+        .kt-card {
+            position: fixed;
+            width: 340px;
+            max-width: calc(100vw - 24px);
+            max-height: calc(100vh - 24px);
+            overflow-y: auto;
+            background: var(--f-bg1);
+            color: var(--f-fg1);
+            border: 1px solid var(--f-stroke1);
+            border-radius: var(--f-r8);
+            box-shadow: var(--f-shadow28);
+            padding: var(--f-space-5);
+            animation: modal-slide-up var(--f-normal) var(--f-ease);
+        }
+        .kt-card.kt-center { width: 420px; padding: var(--f-space-8); text-align: center; }
+        .kt-card.kt-center .kt-actions { justify-content: center; }
+
+        .kt-count {
+            font-size: var(--f-text-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--f-brand);
+            margin-bottom: var(--f-space-2);
+        }
+        .kt-title { font-size: var(--f-text-lg); font-weight: 600; margin-bottom: var(--f-space-2); }
+        .kt-center .kt-title { font-size: var(--f-text-2xl); color: var(--f-brand); }
+        .kt-body { font-size: var(--f-text-base); line-height: 1.55; color: var(--f-fg2); }
+        .kt-body kbd {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: var(--f-text-sm);
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
+            border-radius: var(--f-r4);
+            padding: 0 5px;
+            color: var(--f-fg1);
+        }
+        .kt-body b { color: var(--f-fg1); font-weight: 600; }
+        .kt-note { margin-top: var(--f-space-2); font-size: var(--f-text-sm); color: var(--f-fg3); }
+
+        .kt-progress { height: 3px; background: var(--f-bg3); border-radius: var(--f-rpill); margin-top: var(--f-space-4); overflow: hidden; }
+        .kt-progress > div { height: 100%; background: var(--f-brand); transition: width var(--f-slow) var(--f-ease); }
+
+        .kt-actions { display: flex; align-items: center; gap: var(--f-space-2); margin-top: var(--f-space-4); }
+        .kt-actions .kt-spacer { flex: 1; }
+        .kt-skip {
+            background: none; border: none; cursor: pointer;
+            font-family: inherit; font-size: var(--f-text-sm); color: var(--f-fg3);
+            padding: var(--f-space-2);
+        }
+        .kt-skip:hover { color: var(--f-fg1); text-decoration: underline; }
+        .kt-btn {
+            font-family: inherit; font-size: var(--f-text-base); font-weight: 600;
+            padding: var(--f-space-2) var(--f-space-4);
+            border-radius: var(--f-r4);
+            border: 1px solid var(--f-stroke1);
+            background: var(--f-bg2); color: var(--f-fg2);
+            cursor: pointer;
+            transition: background var(--f-fast) var(--f-ease), border-color var(--f-fast) var(--f-ease);
+        }
+        .kt-btn:hover { background: var(--f-bg3); border-color: var(--f-fg4); }
+        .kt-btn.kt-primary { background: var(--f-brand); border-color: var(--f-brand); color: #fff; }
+        .kt-btn.kt-primary:hover { background: var(--f-brand-a); border-color: var(--f-brand-a); }
+        .kt-btn:focus-visible, .kt-skip:focus-visible { outline: 2px solid var(--f-brand-h); outline-offset: 2px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .kt-spot, .kt-progress > div { transition: none; }
+            .kt-card { animation: none; }
+        }
     </style>
 </head>
 <body>
@@ -1708,9 +1800,10 @@
                 <span style="font-size: 14px; color: var(--f-fg3);">
                     <span id="sliceCount">0</span> slices
                 </span>
+                <button class="theme-toggle" id="tourBtn" title="Take a tour of Kerf" aria-label="Take a tour of Kerf">?</button>
                 <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">🌙</button>
-                <button class="btn" id="saveBtn">Save Project</button>
-                <button class="btn" id="loadBtn">Load Project</button>
+                <button class="btn" id="saveBtn" data-tour="save">Save Project</button>
+                <button class="btn" id="loadBtn" data-tour="save">Load Project</button>
                 <input type="file" id="projectFile" accept=".zip" style="display: none;">
             </div>
         </header>
@@ -1726,7 +1819,7 @@
         <div id="editor-tab" class="tabs-content active" style="grid-template-columns: 200px 1fr 300px;">
             <!-- SIDEBAR LEFT: Sample Browser & Controls -->
             <div class="sidebar-left">
-                <div class="sidebar-section">
+                <div class="sidebar-section" data-tour="import">
                     <div class="sidebar-title">Audio File</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; height: 40px;">
                         <div class="file-input-wrapper" style="margin: 0; height: 100%;">
@@ -1754,7 +1847,7 @@
                     </div>
                 </div>
 
-                <div class="sidebar-section">
+                <div class="sidebar-section" data-tour="detect">
                     <div class="sidebar-title">Transient Sensitivity</div>
                     <div class="control-group" style="background: var(--f-bg3); padding: 6px; border-radius: var(--f-r6);">
                         <input type="range" id="sensitivity" min="0.1" max="1" step="0.05" value="0.5" style="width: 100%; height: 6px; background: var(--f-bg2); border-radius: var(--f-r4); outline: none; -webkit-appearance: none; appearance: none; cursor: pointer;">
@@ -1771,7 +1864,7 @@
                 </div>
 
                 <!-- MIDI Mode Switch -->
-                <div class="sidebar-section">
+                <div class="sidebar-section" data-tour="midi">
                     <div class="sidebar-title">MIDI Mode</div>
                     <div style="display: flex; gap: 4px; background: var(--f-bg3); padding: 4px; border-radius: var(--f-r6);">
                         <button id="midiModeTrigger" class="btn" style="flex: 1; padding: 6px; font-size: 11px; background: var(--f-brand); color: #fff; border-color: var(--f-brand);">Trigger</button>
@@ -1793,7 +1886,7 @@
             <!-- EDITOR: Waveform + Slices -->
             <div class="editor">
                 <div style="font-size: 13px; color: var(--f-fg3); text-transform: uppercase; letter-spacing: 1px;">Waveform</div>
-                <div class="waveform-container">
+                <div class="waveform-container" data-tour="waveform">
                     <canvas id="waveform"></canvas>
                 </div>
                 <div class="controls-bar">
@@ -1809,7 +1902,7 @@
                     </div>
                 </div>
                 <!-- EFFECTS RACK - Pedais skeuomórficos com knobs -->
-                <div class="effects-panel" style="grid-template-columns: repeat(5, 1fr); padding: 12px 10px; gap: 10px; min-height: 170px; max-height: 170px; overflow: visible; background: var(--f-effects-bg); border-radius: var(--f-r6); box-shadow: var(--f-effects-shadow);">
+                <div class="effects-panel" data-tour="effects" style="grid-template-columns: repeat(5, 1fr); padding: 12px 10px; gap: 10px; min-height: 170px; max-height: 170px; overflow: visible; background: var(--f-effects-bg); border-radius: var(--f-r6); box-shadow: var(--f-effects-shadow);">
                     
                     <!-- COMPRESSOR PEDAL -->
                     <div class="pedal purple" id="compPedal">
@@ -1922,7 +2015,7 @@
                     </div>
                 </div>
             </div>
-            <div class="sidebar-right">
+            <div class="sidebar-right" data-tour="slices">
                 <div class="sidebar-title">Slices</div>
                 <div id="slicesList"></div>
             </div>
@@ -1931,9 +2024,9 @@
         <!-- SEQUENCER TAB -->
         <div id="sequencer-tab" class="tabs-content" style="grid-template-columns: 1fr;">
             <div class="sequencer-container" style="overflow: hidden; display: grid; grid-template-rows: auto 1fr;">
-                <div class="sequencer-header" style="flex-direction: column; gap: 8px; padding: 10px 16px;">
+                <div class="sequencer-header" data-tour="sequencer" style="flex-direction: column; gap: 8px; padding: 10px 16px;">
                     <!-- Row 1: Scenes -->
-                    <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+                    <div data-tour="scenes" style="display: flex; align-items: center; gap: 6px; width: 100%;">
                         <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--f-fg3); min-width: 46px;">Scene</span>
                         <div id="sceneBtns" style="display: flex; gap: 4px;">
                         </div>
@@ -1980,7 +2073,7 @@
         <!-- MULTI-TEMPO TAB -->
         <div id="multitempo-tab" class="tabs-content" style="grid-template-columns: 1fr; grid-template-rows: auto 1fr;">
             <!-- Multi-Tempo Controls Bar -->
-            <div class="transport-bar" style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--f-stroke1);">
+            <div class="transport-bar" data-tour="multitempo" style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--f-stroke1);">
                 <button id="multiTempoPlayBtn" class="transport-btn play" title="Play"><span class="t-icon">▶</span></button>
                 <button id="multiTempoStopBtn" class="transport-btn stop" title="Stop"><span class="t-icon">■</span></button>
                 <button id="multiTempoRecBtn" class="transport-btn rec" title="Gravar para WAV"><span class="t-dot"></span>REC</button>
@@ -1991,7 +2084,7 @@
         </div>
 
         <!-- FOOTER: Keyboard QWERTY real com 2 linhas -->
-        <div class="footer" style="display: flex; flex-direction: column; padding: 8px 15px; gap: 6px; overflow: visible; background: var(--f-bg2); border-top: 1px solid var(--f-stroke1); align-items: center; justify-content: center; height: auto;">
+        <div class="footer" data-tour="keyboard" style="display: flex; flex-direction: column; padding: 8px 15px; gap: 6px; overflow: visible; background: var(--f-bg2); border-top: 1px solid var(--f-stroke1); align-items: center; justify-content: center; height: auto;">
             <!-- Linha de cima: W E T Y U O P (sustenidos) -->
             <div id="keyboard-black" class="keyboard-black" style="display: flex; gap: 3px; justify-content: center; flex-wrap: wrap;"></div>
             <!-- Linha de baixo: A S D F G H J K L Ç ª (naturais) -->
@@ -5679,6 +5772,227 @@
         } else {
             initKnobs();
         }
+    </script>
+
+    <script>
+        // === PRODUCT TOUR ===
+        // Wizard de primeira utilização: spotlight sobre as zonas da app + cartão explicativo.
+        // Abre sozinho na primeira visita (flag em localStorage) e pode ser repetido com o botão "?".
+        // Os alvos são elementos com data-tour="<chave>"; vários elementos com a mesma chave
+        // são destacados em conjunto.
+        (function () {
+            const STORAGE_KEY = 'kerfTourSeen';
+            const SPOT_PAD = 6;
+
+            const steps = [
+                {
+                    center: true, title: 'Welcome to Kerf', next: 'Start tour', skip: 'Skip',
+                    body: 'Kerf chops any sound into slices you can play, sequence and mangle — right in your browser.' +
+                          '<div class="kt-note">This takes about a minute. Leave any time, and restart it later from the <b>?</b> button in the top bar.</div>'
+                },
+                {
+                    tab: 'editor', target: 'import', place: 'right', title: 'Bring in a sound',
+                    body: 'Click <b>+ Import</b> to load an audio file, or hit <b>REC</b> to record from your microphone. Audio is processed locally, in your browser.'
+                },
+                {
+                    tab: 'editor', target: 'waveform', place: 'bottom', title: 'Slice it',
+                    body: 'Your sample shows up here. <b>Double-click</b> the waveform to drop a slice at that spot, then select a slice and drag its edges to fine-tune it.' +
+                          '<div class="kt-note">The ▶ and ■ buttons in the corner play the whole sample.</div>'
+                },
+                {
+                    tab: 'editor', target: 'detect', place: 'right', title: 'Or let Kerf find the hits',
+                    body: '<b>Auto Detect</b> slices the sample at every transient — drum hits, notes, syllables. Use <b>Transient Sensitivity</b> to get more or fewer slices, and <b>Clear</b> to start over.'
+                },
+                {
+                    tab: 'editor', target: 'slices', place: 'left', title: 'Shape every slice',
+                    body: 'Each slice gets a card with its own note. Expand it to set <b>Pitch</b>, <b>Vol</b>, <b>Pan</b>, <b>Start/End</b> and fades, or pick <b>Shot</b> (plays once) or <b>Loop</b>.' +
+                          '<div class="kt-note">Edits retrigger the slice instantly, so you hear every change.</div>'
+                },
+                {
+                    tab: 'editor', target: 'effects', place: 'top', title: 'Add some dirt',
+                    body: 'Four pedals in series: <b>Comp → Bits → Drive → Reverb</b>. Drag a knob, or scroll over it, to turn it. The LED switches a pedal on or off, and <b>Bypass</b> turns the whole rack off.'
+                },
+                {
+                    tab: 'editor', target: 'midi', place: 'right', title: 'Two ways to play',
+                    body: '<b>Trigger</b>: each key fires a different slice — great for drum kits. <b>Sampler</b>: one slice is spread across the keyboard at different pitches. Plug in a MIDI controller and the status below shows when it connects.'
+                },
+                {
+                    tab: 'editor', target: 'keyboard', place: 'top', title: 'Play it',
+                    body: 'Use your computer keyboard: <kbd>A</kbd>–<kbd>L</kbd> on the home row and <kbd>W</kbd>–<kbd>P</kbd> above it. Each key plays one slice, from left to right. You can also click the keys on screen.'
+                },
+                {
+                    tab: 'sequencer', target: 'sequencer', place: 'bottom', title: 'Build a pattern',
+                    body: 'Every slice gets a row of steps. Click a step to switch it on; click again for a <b>triple-hit roll</b> (magenta); once more to clear it. Set <b>BPM</b>, <b>Swing</b> and step count, then press ▶. <b>M</b> and <b>S</b> mute or solo a row.' +
+                          '<div class="kt-note">The grid appears as soon as your sample has slices.</div>'
+                },
+                {
+                    tab: 'sequencer', target: 'scenes', place: 'bottom', title: 'Eight scenes',
+                    body: 'Keep up to eight patterns and jump between them with the numbered buttons or the <kbd>1</kbd>–<kbd>8</kbd> keys. While playing, the next scene starts at the end of the loop. <b>Shift+click</b> copies the current pattern into a scene; ▶ plays every filled scene in order.'
+                },
+                {
+                    tab: 'multitempo', target: 'multitempo', place: 'bottom', title: 'Every slice on its own clock',
+                    body: 'Multi-Tempo gives each slice its own BPM and volume and loops it independently, so slices drift in and out of phase. Press <b>REC</b> to capture what you hear as a WAV file.'
+                },
+                {
+                    tab: 'editor', target: 'save', place: 'bottom', title: 'Keep your work', next: 'Finish',
+                    body: '<b>Save Project</b> bundles your sample, slices, patterns and settings into a .zip; <b>Load Project</b> brings it all back. <b>Export WAV</b>, in the Editor sidebar, renders audio files.' +
+                          '<div class="kt-note">That’s the tour! Restart it any time with the <b>?</b> button.</div>'
+                }
+            ];
+            const LAST = steps.length - 1;
+
+            let overlay = null, spot = null, card = null;
+            let idx = 0, returnTab = 'editor', returnFocus = null;
+
+            const seen = () => { try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch (_) { return false; } };
+            const markSeen = () => { try { localStorage.setItem(STORAGE_KEY, '1'); } catch (_) { /* modo privado */ } };
+            const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+            function activeTab() {
+                return document.querySelector('.tab-btn.active')?.dataset.tab || 'editor';
+            }
+            function showTab(name) {
+                if (name && activeTab() !== name) document.querySelector(`.tab-btn[data-tab="${name}"]`)?.click();
+            }
+
+            // União dos retângulos de todos os elementos visíveis com esta chave (ou null)
+            function targetRect(key) {
+                const els = Array.from(document.querySelectorAll(`[data-tour="${key}"]`));
+                els[0]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                let r = null;
+                els.forEach(el => {
+                    const b = el.getBoundingClientRect();
+                    if (!b.width && !b.height) return; // escondido (display: none)
+                    r = r
+                        ? { left: Math.min(r.left, b.left), top: Math.min(r.top, b.top), right: Math.max(r.right, b.right), bottom: Math.max(r.bottom, b.bottom) }
+                        : { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
+                });
+                return r;
+            }
+
+            function placeCard(rect, prefer) {
+                const m = 12, gap = 16;
+                const cw = card.offsetWidth, ch = card.offsetHeight;
+                const vw = window.innerWidth, vh = window.innerHeight;
+                let x = (vw - cw) / 2, y = (vh - ch) / 2;
+
+                if (rect) {
+                    const l = rect.left - SPOT_PAD, t = rect.top - SPOT_PAD, r = rect.right + SPOT_PAD, b = rect.bottom + SPOT_PAD;
+                    // Só o eixo principal tem de caber; o eixo transversal é ajustado com clamp
+                    const options = {
+                        bottom: { x: (l + r) / 2 - cw / 2, y: b + gap, fits: b + gap + ch <= vh - m },
+                        top:    { x: (l + r) / 2 - cw / 2, y: t - gap - ch, fits: t - gap - ch >= m },
+                        right:  { x: r + gap, y: (t + b) / 2 - ch / 2, fits: r + gap + cw <= vw - m },
+                        left:   { x: l - gap - cw, y: (t + b) / 2 - ch / 2, fits: l - gap - cw >= m }
+                    };
+                    const order = [prefer, 'bottom', 'top', 'right', 'left'].filter(Boolean);
+                    const pick = order.find(k => options[k].fits);
+                    if (pick) { x = options[pick].x; y = options[pick].y; }
+                    else { x = (vw - cw) / 2; y = vh - ch - m; } // nada cabe: sobrepõe-se ao alvo, em baixo
+                }
+                card.style.left = clamp(x, m, Math.max(m, vw - cw - m)) + 'px';
+                card.style.top = clamp(y, m, Math.max(m, vh - ch - m)) + 'px';
+            }
+
+            function layout() {
+                if (!overlay) return;
+                const s = steps[idx];
+                const rect = s.target ? targetRect(s.target) : null;
+                overlay.classList.toggle('kt-plain', !rect);
+                if (rect) {
+                    spot.style.left = rect.left - SPOT_PAD + 'px';
+                    spot.style.top = rect.top - SPOT_PAD + 'px';
+                    spot.style.width = rect.right - rect.left + SPOT_PAD * 2 + 'px';
+                    spot.style.height = rect.bottom - rect.top + SPOT_PAD * 2 + 'px';
+                }
+                placeCard(rect, s.place);
+            }
+
+            function render() {
+                const s = steps[idx];
+                card.classList.toggle('kt-center', !!s.center);
+                card.innerHTML =
+                    (idx > 0 ? `<div class="kt-count">Step ${idx} of ${LAST}</div>` : '') +
+                    `<div class="kt-title" id="ktTitle">${s.title}</div>` +
+                    `<div class="kt-body" id="ktBody">${s.body}</div>` +
+                    `<div class="kt-progress" aria-hidden="true"><div style="width:${(idx / LAST) * 100}%"></div></div>` +
+                    '<div class="kt-actions">' +
+                        (idx < LAST ? `<button class="kt-skip" data-kt="skip">${s.skip || 'Skip tour'}</button>` : '') +
+                        '<span class="kt-spacer"></span>' +
+                        (idx > 0 ? '<button class="kt-btn" data-kt="back">Back</button>' : '') +
+                        `<button class="kt-btn kt-primary" data-kt="next">${s.next || 'Next'}</button>` +
+                    '</div>';
+                showTab(s.tab); // troca síncrona (classes); getBoundingClientRect força o reflow
+                layout();
+                card.focus({ preventScroll: true });
+            }
+
+            function go(i) {
+                if (i < 0) return;
+                if (i > LAST) return close();
+                idx = i;
+                render();
+            }
+
+            function close() {
+                if (!overlay) return;
+                markSeen();
+                document.removeEventListener('keydown', onKey, true);
+                window.removeEventListener('resize', layout);
+                overlay.remove();
+                overlay = spot = card = null;
+                showTab(returnTab);
+                if (returnFocus && document.contains(returnFocus)) returnFocus.focus({ preventScroll: true });
+            }
+
+            function onKey(e) {
+                // A app trata 1-8 e as letras como notas: enquanto o tour está aberto nada disso deve disparar.
+                // (keyup fica livre para não deixar notas presas.)
+                e.stopPropagation();
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+                const onButton = e.target instanceof HTMLButtonElement;
+                if (e.key === 'Escape') { e.preventDefault(); close(); }
+                else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !onButton)) { e.preventDefault(); go(idx + 1); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); go(idx - 1); }
+                else if (e.key === 'Tab') {
+                    // Prende o foco dentro do cartão
+                    const f = Array.from(card.querySelectorAll('button'));
+                    const first = f[0], last = f[f.length - 1];
+                    if (e.shiftKey && (e.target === card || e.target === first)) { e.preventDefault(); last.focus(); }
+                    else if (!e.shiftKey && e.target === last) { e.preventDefault(); first.focus(); }
+                }
+            }
+
+            function start() {
+                if (overlay) return;
+                returnTab = activeTab();
+                returnFocus = document.activeElement;
+
+                overlay = document.createElement('div');
+                overlay.className = 'kt-overlay kt-plain';
+                overlay.innerHTML = '<div class="kt-spot"></div>' +
+                    '<div class="kt-card" role="dialog" aria-modal="true" aria-labelledby="ktTitle" aria-describedby="ktBody" tabindex="-1" style="outline:none"></div>';
+                spot = overlay.querySelector('.kt-spot');
+                card = overlay.querySelector('.kt-card');
+                card.addEventListener('click', (e) => {
+                    const action = e.target.closest('[data-kt]')?.dataset.kt;
+                    if (action === 'next') go(idx + 1);
+                    else if (action === 'back') go(idx - 1);
+                    else if (action === 'skip') close();
+                });
+                document.body.appendChild(overlay);
+                document.addEventListener('keydown', onKey, true);
+                window.addEventListener('resize', layout);
+                // As fontes web podem mudar as dimensões depois do primeiro layout
+                if (document.fonts?.ready) document.fonts.ready.then(layout);
+                go(0);
+            }
+
+            document.getElementById('tourBtn')?.addEventListener('click', start);
+            window.kerfTour = { start };
+
+            if (!seen()) setTimeout(start, 800);
+        })();
     </script>
 </body>
 </html>
