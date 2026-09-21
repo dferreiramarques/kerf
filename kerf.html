@@ -2073,7 +2073,7 @@
         <!-- MULTI-TEMPO TAB -->
         <div id="multitempo-tab" class="tabs-content" style="grid-template-columns: 1fr; grid-template-rows: auto 1fr;">
             <!-- Multi-Tempo Controls Bar -->
-            <div class="transport-bar" data-tour="multitempo" style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--f-stroke1);">
+            <div class="transport-bar" style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--f-stroke1);">
                 <button id="multiTempoPlayBtn" class="transport-btn play" title="Play"><span class="t-icon">▶</span></button>
                 <button id="multiTempoStopBtn" class="transport-btn stop" title="Stop"><span class="t-icon">■</span></button>
                 <button id="multiTempoRecBtn" class="transport-btn rec" title="Gravar para WAV"><span class="t-dot"></span>REC</button>
@@ -5821,17 +5821,13 @@
                     body: 'Use your computer keyboard: <kbd>A</kbd>–<kbd>L</kbd> on the home row and <kbd>W</kbd>–<kbd>P</kbd> above it. Each key plays one slice, from left to right. You can also click the keys on screen.'
                 },
                 {
-                    tab: 'sequencer', target: 'sequencer', place: 'bottom', title: 'Build a pattern',
+                    tab: 'sequencer', target: 'sequencer', place: 'bottom', title: 'Sequencer tab: build a pattern',
                     body: 'Every slice gets a row of steps. Click a step to switch it on; click again for a <b>triple-hit roll</b> (magenta); once more to clear it. Set <b>BPM</b>, <b>Swing</b> and step count, then press ▶. <b>M</b> and <b>S</b> mute or solo a row.' +
                           '<div class="kt-note">The grid appears as soon as your sample has slices.</div>'
                 },
                 {
                     tab: 'sequencer', target: 'scenes', place: 'bottom', title: 'Eight scenes',
                     body: 'Keep up to eight patterns and jump between them with the numbered buttons or the <kbd>1</kbd>–<kbd>8</kbd> keys. While playing, the next scene starts at the end of the loop. <b>Shift+click</b> copies the current pattern into a scene; ▶ plays every filled scene in order.'
-                },
-                {
-                    tab: 'multitempo', target: 'multitempo', place: 'bottom', title: 'Every slice on its own clock',
-                    body: 'Multi-Tempo gives each slice its own BPM and volume and loops it independently, so slices drift in and out of phase. Press <b>REC</b> to capture what you hear as a WAV file.'
                 },
                 {
                     tab: 'editor', target: 'save', place: 'bottom', title: 'Keep your work', next: 'Finish',
