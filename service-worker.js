@@ -1,7 +1,7 @@
 // Kerf Service Worker (anteriormente Spliiice)
 // Enables offline functionality and caching for PWA
 
-const CACHE_NAME = 'kerf-v3';
+const CACHE_NAME = 'kerf-v5';
 const urlsToCache = [
   './kerf.html',
   './manifest.json'

@@ -7,9 +7,14 @@
             var saved = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', saved);
         })();
+        // Layout mobile: ligado já aqui para não haver um frame com o layout desktop
+        window.KERF_MOBILE_QUERY = '(max-width: 767px), (pointer: coarse) and (max-height: 500px)';
+        if (window.matchMedia && matchMedia(window.KERF_MOBILE_QUERY).matches) {
+            document.documentElement.classList.add('kerf-mobile');
+        }
     </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1691,6 +1696,288 @@
             }
         }
 
+        /* === MOBILE (telemóvel, vertical e horizontal) ===
+           Tudo aqui depende de html.kerf-mobile, que só é ligado por JS em ecrãs pequenos
+           (ver "MOBILE" no script). Sem essa classe nada muda: o layout desktop fica igual. */
+        html:not(.kerf-mobile) .m-only { display: none !important; }
+
+        html.kerf-mobile {
+            --m-fab: 52px;
+            --m-sheet-h: min(340px, 50vh);
+        }
+
+        html.kerf-mobile .container {
+            height: 100vh;
+            height: 100dvh;
+            grid-template-rows: 48px 40px minmax(0, 1fr);
+        }
+
+        /* Topo: título + botão de menu; os controlos abrem num popover */
+        html.kerf-mobile header { padding: 0 8px 0 14px; }
+        html.kerf-mobile .m-menu-btn { width: 40px; height: 40px; font-size: 20px; position: relative; z-index: 1; }
+        html.kerf-mobile .header-controls {
+            display: none;
+            position: fixed;
+            top: 52px;
+            right: 8px;
+            width: 220px;
+            flex-wrap: wrap;
+            gap: var(--f-space-2);
+            padding: var(--f-space-3);
+            background: var(--f-bg1);
+            border: 1px solid var(--f-stroke1);
+            border-radius: var(--f-r8);
+            box-shadow: var(--f-shadow28);
+        }
+        html.kerf-mobile.m-menu-open .header-controls { display: flex; }
+        html.kerf-mobile .header-controls > span { flex: 1 1 100%; padding: 0 2px; }
+        html.kerf-mobile .header-controls > .theme-toggle { width: 40px; height: 40px; }
+        html.kerf-mobile .header-controls > .btn { flex: 1 1 100%; min-height: 44px; }
+
+        html.kerf-mobile .tabs-nav { height: 40px; padding: 0 4px; }
+        html.kerf-mobile .tab-btn { flex: 1 1 0; padding: 0 6px; }
+
+        /* Editor: waveform em cima, controlos, seletor Sample/FX e o painel escolhido.
+           .editor passa a display: contents para os filhos entrarem na grelha do separador. */
+        html.kerf-mobile #editor-tab.tabs-content.active {
+            grid-template-columns: minmax(0, 1fr) !important;
+            grid-template-rows: minmax(150px, 36%) auto auto minmax(0, 1fr);
+            grid-template-areas: "wave" "ctrl" "seg" "panel";
+            gap: 8px;
+            padding: 8px 8px 0;
+        }
+        html.kerf-mobile #editor-tab .editor { display: contents; }
+        html.kerf-mobile #editor-tab .editor > div:first-child { display: none; } /* rótulo "Waveform" */
+        html.kerf-mobile #editor-tab .waveform-container { grid-area: wave; min-height: 0; }
+        html.kerf-mobile #editor-tab .controls-bar { grid-area: ctrl; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+        html.kerf-mobile #editor-tab .controls-bar input[type="range"] { min-width: 0; }
+        html.kerf-mobile #editor-tab .controls-bar label { min-width: 0; font-size: 11px; }
+
+        html.kerf-mobile .m-seg {
+            grid-area: seg;
+            display: flex;
+            gap: 4px;
+            padding: 3px;
+            background: var(--f-bg3);
+            border-radius: var(--f-r6);
+        }
+        html.kerf-mobile .m-seg button {
+            flex: 1;
+            height: 34px;
+            background: transparent;
+            border: none;
+            border-radius: var(--f-r4);
+            color: var(--f-fg3);
+            font-family: inherit;
+            font-size: var(--f-text-sm);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        html.kerf-mobile .m-seg button[aria-selected="true"] { background: var(--f-bg1); color: var(--f-fg1); box-shadow: var(--f-shadow2); }
+
+        /* Painel (Sample ou FX): ocupa o resto e faz scroll; folga em baixo para os botões flutuantes */
+        html.kerf-mobile #editor-tab .sidebar-left,
+        html.kerf-mobile #editor-tab .effects-panel {
+            grid-area: panel;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        html.kerf-mobile #editor-tab[data-mpanel="fx"] .sidebar-left,
+        html.kerf-mobile #editor-tab:not([data-mpanel="fx"]) .effects-panel { display: none !important; }
+        html.kerf-mobile #editor-tab .sidebar-left {
+            border: 1px solid var(--f-stroke1);
+            border-radius: var(--f-r6) var(--f-r6) 0 0;
+            padding-bottom: calc(var(--m-fab) * 2 + 40px);
+        }
+        html.kerf-mobile #editor-tab .effects-panel {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+            align-content: start;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            border-radius: var(--f-r6) var(--f-r6) 0 0 !important;
+            padding-bottom: calc(var(--m-fab) * 2 + 40px) !important;
+        }
+        html.kerf-mobile #editor-tab .effects-panel .pedal { min-width: 0; }
+
+        /* Alvos de toque maiores */
+        html.kerf-mobile input[type="range"]::-webkit-slider-thumb { width: 22px; height: 22px; }
+        html.kerf-mobile input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; }
+        html.kerf-mobile #editor-tab .sidebar-left .btn,
+        html.kerf-mobile #editor-tab .sidebar-left select { min-height: 40px; }
+
+        /* Slices: gaveta lateral aberta pelo botão flutuante */
+        html.kerf-mobile #editor-tab .sidebar-right {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(360px, 90vw);
+            z-index: 950;
+            border-left: 1px solid var(--f-stroke1);
+            box-shadow: var(--f-shadow28);
+            padding: calc(16px + env(safe-area-inset-top)) 12px calc(var(--m-fab) * 2 + 48px);
+            transform: translateX(105%);
+            visibility: hidden;
+            transition: transform var(--f-normal) var(--f-ease), visibility 0s linear var(--f-normal);
+        }
+        html.kerf-mobile.m-slices-open #editor-tab .sidebar-right {
+            transform: none;
+            visibility: visible;
+            transition: transform var(--f-normal) var(--f-ease);
+        }
+        html.kerf-mobile .slice-header { min-height: 40px; }
+        html.kerf-mobile .slice-btn-play,
+        html.kerf-mobile .mode-btn,
+        html.kerf-mobile .slice-actions button { min-height: 36px; }
+        html.kerf-mobile .param-slider { min-height: 32px; }
+
+        .m-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 940;
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--f-normal) var(--f-ease);
+        }
+        html.kerf-mobile.m-slices-open .m-backdrop { opacity: 1; pointer-events: auto; }
+
+        /* Pads: o rodapé do teclado passa a folha que sobe de baixo */
+        html.kerf-mobile .footer {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 900;
+            height: calc(var(--m-sheet-h) + env(safe-area-inset-bottom)) !important;
+            padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) !important;
+            border-radius: 14px 14px 0 0;
+            box-shadow: var(--f-shadow28);
+            transform: translateY(105%);
+            visibility: hidden;
+            transition: transform var(--f-normal) var(--f-ease), visibility 0s linear var(--f-normal);
+        }
+        html.kerf-mobile.m-pads-open .footer {
+            transform: none;
+            visibility: visible;
+            transition: transform var(--f-normal) var(--f-ease);
+        }
+        html.kerf-mobile .footer .keyboard-black,
+        html.kerf-mobile .footer .keyboard-white { display: none !important; }
+
+        .m-pads {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 1fr;
+            gap: 8px;
+        }
+        .m-pad {
+            --pad-color: var(--f-brand);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 8px 8px 8px 12px;
+            background: var(--f-bg3);
+            border: 1px solid var(--f-stroke1);
+            border-radius: 10px;
+            color: var(--f-fg1);
+            font-family: inherit;
+            font-size: var(--f-text-base);
+            font-weight: 700;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 60ms ease, background 60ms ease;
+        }
+        .m-pad::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--pad-color);
+        }
+        .m-pad small { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; color: var(--f-fg3); }
+        .m-pad.hit { background: var(--pad-color); color: #0b0e14; transform: scale(0.96); }
+        .m-pad.hit small { color: inherit; }
+        .m-pad:disabled { opacity: 0.3; }
+
+        /* Botões flutuantes (canto inferior direito, sobem quando os pads estão abertos) */
+        .m-fabs {
+            position: fixed;
+            right: calc(14px + env(safe-area-inset-right));
+            bottom: calc(14px + env(safe-area-inset-bottom));
+            z-index: 960;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: bottom var(--f-normal) var(--f-ease);
+        }
+        html.kerf-mobile.m-pads-open .m-fabs { bottom: calc(var(--m-sheet-h) + env(safe-area-inset-bottom) + 12px); }
+        html.kerf-mobile:not([data-ktab="editor"]) #mSlicesFab,
+        html.kerf-mobile.m-slices-open #mPadsFab { display: none; }
+        .m-fab {
+            position: relative;
+            width: var(--m-fab);
+            height: var(--m-fab);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid var(--f-stroke1);
+            background: var(--f-bg2);
+            color: var(--f-fg1);
+            box-shadow: var(--f-shadow28);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .m-fab-primary { background: var(--f-brand); border-color: var(--f-brand); color: #fff; }
+        .m-fab .m-ico-close,
+        .m-fab[aria-expanded="true"] .m-ico-open { display: none; }
+        .m-fab[aria-expanded="true"] .m-ico-close { display: block; }
+        .m-fab-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 5px;
+            border-radius: var(--f-rpill);
+            background: var(--f-brand);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 20px;
+            text-align: center;
+        }
+        .m-fab[aria-expanded="true"] .m-fab-badge { display: none; }
+
+        /* Horizontal: waveform à esquerda, painel à direita; pads em 8×2 */
+        @media (orientation: landscape) {
+            html.kerf-mobile { --m-sheet-h: min(170px, 50vh); }
+            html.kerf-mobile .container { grid-template-rows: 40px 36px minmax(0, 1fr); }
+            html.kerf-mobile .tabs-nav { height: 36px; }
+            html.kerf-mobile .header-controls { top: 44px; }
+            html.kerf-mobile #editor-tab.tabs-content.active {
+                grid-template-columns: minmax(0, 1fr) minmax(250px, 36%) !important;
+                grid-template-rows: auto minmax(0, 1fr) auto;
+                grid-template-areas: "wave seg" "wave panel" "ctrl panel";
+                padding: 8px calc(8px + env(safe-area-inset-right)) 0 calc(8px + env(safe-area-inset-left));
+            }
+            html.kerf-mobile #editor-tab .controls-bar { padding-bottom: 8px; }
+            html.kerf-mobile .m-pads { grid-template-columns: repeat(8, 1fr); }
+            html.kerf-mobile .m-fabs { flex-direction: row-reverse; }
+        }
+
         /* Modal — animações (secção 6 do design system) */
         @keyframes modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modal-slide-up {
@@ -1796,16 +2083,18 @@
         <!-- HEADER -->
         <header>
             <div class="header-title" id="appTitle" style="cursor: pointer;">Kerf<span style="font-size: 9px; opacity: 0.5; font-weight: normal; vertical-align: super; margin-left: 2px;">v0.1.0</span></div>
-            <div class="header-controls">
+            <div class="header-controls" id="headerControls">
                 <span style="font-size: 14px; color: var(--f-fg3);">
                     <span id="sliceCount">0</span> slices
                 </span>
-                <button class="theme-toggle" id="tourBtn" title="Take a tour of Kerf" aria-label="Take a tour of Kerf">?</button>
+                <button class="theme-toggle" id="tourBtn" title="Tour of this tab" aria-label="Show the tour for this tab">?</button>
                 <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">🌙</button>
                 <button class="btn" id="saveBtn" data-tour="save">Save Project</button>
                 <button class="btn" id="loadBtn" data-tour="save">Load Project</button>
                 <input type="file" id="projectFile" accept=".zip" style="display: none;">
             </div>
+            <!-- Mobile: os controlos do topo vivem num menu -->
+            <button class="theme-toggle m-only m-menu-btn" id="mMenuBtn" data-tour="mmenu" aria-label="Menu" aria-expanded="false" aria-controls="headerControls">⋯</button>
         </header>
 
         <!-- TABS -->
@@ -2015,6 +2304,11 @@
                     </div>
                 </div>
             </div>
+            <!-- Mobile: alterna o painel por baixo da waveform -->
+            <div class="m-seg m-only" data-tour="mseg" role="tablist" aria-label="Editor panel">
+                <button type="button" role="tab" data-mpanel="sample" aria-selected="true">Sample</button>
+                <button type="button" role="tab" data-mpanel="fx" aria-selected="false">FX</button>
+            </div>
             <div class="sidebar-right" data-tour="slices">
                 <div class="sidebar-title">Slices</div>
                 <div id="slicesList"></div>
@@ -2024,7 +2318,7 @@
         <!-- SEQUENCER TAB -->
         <div id="sequencer-tab" class="tabs-content" style="grid-template-columns: 1fr;">
             <div class="sequencer-container" style="overflow: hidden; display: grid; grid-template-rows: auto 1fr;">
-                <div class="sequencer-header" data-tour="sequencer" style="flex-direction: column; gap: 8px; padding: 10px 16px;">
+                <div class="sequencer-header" style="flex-direction: column; gap: 8px; padding: 10px 16px;">
                     <!-- Row 1: Scenes -->
                     <div data-tour="scenes" style="display: flex; align-items: center; gap: 6px; width: 100%;">
                         <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--f-fg3); min-width: 46px;">Scene</span>
@@ -2037,7 +2331,7 @@
                         </div>
                     </div>
                     <!-- Row 2: Controls -->
-                    <div style="display: flex; gap: 16px; align-items: flex-end; width: 100%;">
+                    <div data-tour="seqcontrols" style="display: flex; gap: 16px; align-items: flex-end; width: 100%;">
                         <div class="bpm-control">
                             <label>BPM</label>
                             <input type="number" id="bpmInput" min="40" max="300" value="120" style="width: 100%; padding: 4px; background: var(--f-bg3); border: 1px solid var(--f-stroke1); color: var(--f-brand); border-radius: var(--f-r2); font-family: inherit; font-size: 14px;">
@@ -2066,21 +2360,21 @@
                         </div>
                     </div>
                 </div>
-                <div class="sequencer-grid" id="sequencerGrid" style="flex: 1; overflow: auto;"></div>
+                <div class="sequencer-grid" id="sequencerGrid" data-tour="seqgrid" style="flex: 1; overflow: auto;"></div>
             </div>
         </div>
 
         <!-- MULTI-TEMPO TAB -->
         <div id="multitempo-tab" class="tabs-content" style="grid-template-columns: 1fr; grid-template-rows: auto 1fr;">
             <!-- Multi-Tempo Controls Bar -->
-            <div class="transport-bar" style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--f-stroke1);">
+            <div class="transport-bar" data-tour="mttransport" style="padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--f-stroke1);">
                 <button id="multiTempoPlayBtn" class="transport-btn play" title="Play"><span class="t-icon">▶</span></button>
                 <button id="multiTempoStopBtn" class="transport-btn stop" title="Stop"><span class="t-icon">■</span></button>
                 <button id="multiTempoRecBtn" class="transport-btn rec" title="Gravar para WAV"><span class="t-dot"></span>REC</button>
             </div>
 
             <!-- Multi-Tempo Cards Grid (6 colunas) -->
-            <div id="multiTempoGrid" style="display: grid; grid-template-columns: repeat(auto-fit, 240px); justify-content: center; align-content: safe center; gap: 20px; overflow: auto; padding: 32px; background: var(--f-bg2);"></div>
+            <div id="multiTempoGrid" data-tour="mtgrid" style="display: grid; grid-template-columns: repeat(auto-fit, 240px); justify-content: center; align-content: safe center; gap: 20px; overflow: auto; padding: 32px; background: var(--f-bg2);"></div>
         </div>
 
         <!-- FOOTER: Keyboard QWERTY real com 2 linhas -->
@@ -2089,6 +2383,22 @@
             <div id="keyboard-black" class="keyboard-black" style="display: flex; gap: 3px; justify-content: center; flex-wrap: wrap;"></div>
             <!-- Linha de baixo: A S D F G H J K L Ç ª (naturais) -->
             <div id="keyboard-white" class="keyboard-white" style="display: flex; gap: 3px; justify-content: center; flex-wrap: wrap;"></div>
+            <!-- Mobile: 16 pads em vez do teclado QWERTY -->
+            <div id="mobilePads" class="m-pads m-only"></div>
+        </div>
+
+        <!-- Mobile: botões flutuantes que abrem os pads e a lista de slices -->
+        <div class="m-backdrop m-only" id="mBackdrop"></div>
+        <div class="m-fabs m-only">
+            <button type="button" class="m-fab" id="mSlicesFab" data-tour="mslices" aria-label="Slices" aria-expanded="false">
+                <svg class="m-ico-open" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+                <svg class="m-ico-close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+                <span class="m-fab-badge" id="mSliceBadge">0</span>
+            </button>
+            <button type="button" class="m-fab m-fab-primary" id="mPadsFab" data-tour="mpads" aria-label="Pads" aria-expanded="false">
+                <svg class="m-ico-open" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></g></svg>
+                <svg class="m-ico-close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+            </button>
         </div>
 
         <!-- CREDITS MODAL -->
@@ -3044,6 +3354,11 @@
             prevValues.end = slice.end;
         }
 
+        // Distância (px) a que um clique/toque apanha a extremidade da slice — maior no mobile, para o dedo
+        function sliceHandleHitPx() {
+            return isKerfMobile() ? 24 : 10;
+        }
+
         // Deteção manual de duplo-clique/toque (pointerdown não traz detail fiável)
         let lastCanvasTapTime = 0;
         let lastCanvasTapX = 0;
@@ -3110,7 +3425,7 @@
             const startX = (slice.start / state.audioBuffer.duration) * cw;
             const endX = (slice.end / state.audioBuffer.duration) * cw;
 
-            if (Math.abs(xPixels - startX) < 10) {
+            if (Math.abs(xPixels - startX) < sliceHandleHitPx()) {
                 state.draggingSlice = state.slices.indexOf(slice);
                 state.dragSliceRef = slice;
                 state.dragMode = 'start';
@@ -3118,7 +3433,7 @@
                 e.preventDefault();
                 return;
             }
-            if (Math.abs(xPixels - endX) < 10) {
+            if (Math.abs(xPixels - endX) < sliceHandleHitPx()) {
                 state.draggingSlice = state.slices.indexOf(slice);
                 state.dragSliceRef = slice;
                 state.dragMode = 'end';
@@ -3144,7 +3459,7 @@
             const startX = (slice.start / state.audioBuffer.duration) * canvasWidth;
             const endX = (slice.end / state.audioBuffer.duration) * canvasWidth;
 
-            if (Math.abs(mouseX - startX) < 10 || Math.abs(mouseX - endX) < 10) {
+            if (Math.abs(mouseX - startX) < sliceHandleHitPx() || Math.abs(mouseX - endX) < sliceHandleHitPx()) {
                 canvas.style.cursor = 'col-resize';
             } else {
                 canvas.style.cursor = 'crosshair';
@@ -3932,6 +4247,8 @@
                 btn.style.padding = '8px 16px';
                 keyboardWhite.appendChild(btn);
             });
+
+            if (isKerfMobile()) renderMobilePads();
         }
 
 
@@ -5613,6 +5930,189 @@
             initKeyboard();
         });
 
+        // === MOBILE ===
+        // Layout próprio para telemóvel, ativado pela classe html.kerf-mobile (ver CSS "MOBILE").
+        // Sem a classe nada disto tem efeito: os elementos .m-only ficam escondidos no desktop.
+        function isKerfMobile() {
+            return document.documentElement.classList.contains('kerf-mobile');
+        }
+
+        // 16 pads (4×4 ou 8×2) no lugar do teclado QWERTY.
+        // Trigger: cada pad toca uma slice (as em Loop param ao largar).
+        // Sampler: a slice selecionada é tocada em 16 notas, como nas teclas A–L.
+        function renderMobilePads() {
+            const wrap = document.getElementById('mobilePads');
+            if (!wrap) return;
+            const sampler = state.midiMode === 'sampler';
+            wrap.innerHTML = '';
+
+            for (let idx = 0; idx < 16; idx++) {
+                const slice = state.slices[idx];
+                const note = sampler ? 60 + idx : state.noteOffset + idx;
+                const pad = document.createElement('button');
+                pad.type = 'button';
+                pad.className = 'm-pad';
+                pad.style.setProperty('--pad-color', state.colors[idx % state.colors.length]);
+                pad.innerHTML = `<span>${idx}</span><small>${sampler || slice ? getNoteName(note) : '–'}</small>`;
+                pad.disabled = sampler ? !state.audioBuffer : !(slice && slice.enabled);
+
+                const release = () => {
+                    if (!pad.classList.contains('hit')) return;
+                    pad.classList.remove('hit');
+                    if (sampler) handleVirtualMidiMessage(note, 0);
+                    else if (state.slices[idx] && state.slices[idx].mode === 'loop') stopSlice(idx);
+                };
+                pad.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    const ctx = initAudioContext();
+                    if (ctx.state === 'suspended') ctx.resume();
+                    pad.classList.add('hit');
+                    if (sampler) handleVirtualMidiMessage(note, 127);
+                    else playSlice(idx);
+                });
+                pad.addEventListener('pointerup', release);
+                pad.addEventListener('pointercancel', release);
+                pad.addEventListener('pointerleave', release);
+                wrap.appendChild(pad);
+            }
+        }
+
+        (function initKerfMobile() {
+            const root = document.documentElement;
+            const mq = window.matchMedia(window.KERF_MOBILE_QUERY);
+            const editorTab = document.getElementById('editor-tab');
+            const menuBtn = document.getElementById('mMenuBtn');
+            const padsFab = document.getElementById('mPadsFab');
+            const slicesFab = document.getElementById('mSlicesFab');
+
+            function setSheet(which, open) {
+                root.classList.toggle(`m-${which}-open`, open);
+                (which === 'pads' ? padsFab : slicesFab).setAttribute('aria-expanded', open);
+            }
+            function setMenu(open) {
+                root.classList.toggle('m-menu-open', open);
+                menuBtn.setAttribute('aria-expanded', open);
+            }
+            function closeAll() {
+                setSheet('pads', false);
+                setSheet('slices', false);
+                setMenu(false);
+            }
+
+            // Liga/desliga o layout mobile (ex.: rodar o ecrã ou redimensionar a janela)
+            function apply() {
+                const on = mq.matches;
+                if (on === isKerfMobile()) return;
+                root.classList.toggle('kerf-mobile', on);
+                closeAll();
+                drawWaveform();
+                initKeyboard();
+            }
+            if (mq.addEventListener) mq.addEventListener('change', apply);
+            else mq.addListener(apply); // Safari < 14
+            apply();
+
+            // iOS: tocar mesmo com o interruptor de silêncio ligado (Safari 17+)
+            if (isKerfMobile() && navigator.audioSession) {
+                try { navigator.audioSession.type = 'playback'; } catch (_) { /* não suportado */ }
+            }
+
+            // Separador ativo (o botão de Slices só aparece no Editor)
+            root.dataset.ktab = 'editor';
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    root.dataset.ktab = btn.dataset.tab;
+                    if (btn.dataset.tab !== 'editor') setSheet('slices', false);
+                });
+            });
+
+            // Menu do topo
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                setMenu(!root.classList.contains('m-menu-open'));
+            });
+            document.addEventListener('click', (e) => {
+                if (!root.classList.contains('m-menu-open')) return;
+                // Fecha ao tocar fora ou depois de escolher uma opção (exceto o tema, que se repete)
+                const inMenu = e.target.closest('#headerControls');
+                if (!inMenu || (e.target.closest('button') && !e.target.closest('#themeToggle'))) setMenu(false);
+            });
+
+            // Seletor Sample / FX
+            editorTab.dataset.mpanel = 'sample';
+            document.querySelectorAll('.m-seg [data-mpanel]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    editorTab.dataset.mpanel = btn.dataset.mpanel;
+                    document.querySelectorAll('.m-seg [data-mpanel]').forEach(b => b.setAttribute('aria-selected', b === btn));
+                });
+            });
+
+            // Botões flutuantes: pads e slices não ficam abertos ao mesmo tempo
+            padsFab.addEventListener('click', () => {
+                const open = !root.classList.contains('m-pads-open');
+                setSheet('slices', false);
+                setSheet('pads', open);
+            });
+            slicesFab.addEventListener('click', () => {
+                const open = !root.classList.contains('m-slices-open');
+                setSheet('pads', false);
+                setSheet('slices', open);
+            });
+            document.getElementById('mBackdrop').addEventListener('click', () => setSheet('slices', false));
+
+            // Contador de slices no botão (espelha o #sliceCount do topo)
+            const sliceCount = document.getElementById('sliceCount');
+            const badge = document.getElementById('mSliceBadge');
+            const syncBadge = () => { badge.textContent = sliceCount.textContent; };
+            new MutationObserver(syncBadge).observe(sliceCount, { childList: true, characterData: true, subtree: true });
+            syncBadge();
+
+            // O modo Sampler não reconstrói o teclado; os pads mudam de etiquetas
+            document.getElementById('midiModeSampler').addEventListener('click', () => {
+                if (isKerfMobile()) renderMobilePads();
+            });
+
+            // Waveform ao toque: arrastar pela waveform faz scroll (com zoom); um toque seleciona a slice
+            // por baixo do dedo para as extremidades poderem ser arrastadas. O duplo toque continua a criar slices.
+            const wf = document.querySelector('.waveform-container');
+            let touch = null;
+            canvas.addEventListener('pointerdown', (e) => {
+                if (!isKerfMobile() || e.pointerType === 'mouse' || !state.audioBuffer) return;
+                const rect = canvas.getBoundingClientRect();
+                if (e.clientX - rect.left <= 70 && e.clientY - rect.top <= 36) return; // botões ▶ ■ do canvas
+                touch = {
+                    id: e.pointerId,
+                    x0: e.clientX,
+                    scroll0: wf.scrollLeft,
+                    moved: false,
+                    dragging: state.draggingSlice !== null // o handler principal já correu
+                };
+            });
+            document.addEventListener('pointermove', (e) => {
+                if (!touch || e.pointerId !== touch.id || touch.dragging) return;
+                const dx = e.clientX - touch.x0;
+                if (!touch.moved && Math.abs(dx) < 8) return;
+                touch.moved = true;
+                wf.scrollLeft = touch.scroll0 - dx;
+            });
+            const endTouch = (e) => {
+                if (!touch || e.pointerId !== touch.id) return;
+                const t = touch;
+                touch = null;
+                if (e.type === 'pointercancel' || t.moved || t.dragging || !state.audioBuffer) return;
+                const rect = canvas.getBoundingClientRect();
+                const time = ((e.clientX - rect.left) / canvas.width) * state.audioBuffer.duration;
+                const hit = state.slices.find(s => time >= s.start && time <= s.end);
+                if (hit && hit !== state.selectedSliceForEditing) {
+                    state.selectedSliceForEditing = hit;
+                    updateSlicesList();
+                    drawWaveform();
+                }
+            };
+            document.addEventListener('pointerup', endTouch);
+            document.addEventListener('pointercancel', endTouch);
+        })();
+
         // === SERVICE WORKER (PWA) ===
         // Dentro do wrapper Tauri (app desktop) não há necessidade de service worker —
         // os assets já vêm empacotados localmente. window.__TAURI_INTERNALS__ é injetado
@@ -5784,61 +6284,104 @@
             const STORAGE_KEY = 'kerfTourSeen';
             const SPOT_PAD = 6;
 
-            const steps = [
-                {
-                    center: true, title: 'Welcome to Kerf', next: 'Start tour', skip: 'Skip',
-                    body: 'Kerf chops any sound into slices you can play, sequence and mangle — right in your browser.' +
-                          '<div class="kt-note">This takes about a minute. Leave any time, and restart it later from the <b>?</b> button in the top bar.</div>'
-                },
-                {
-                    tab: 'editor', target: 'import', place: 'right', title: 'Bring in a sound',
-                    body: 'Click <b>+ Import</b> to load an audio file, or hit <b>REC</b> to record from your microphone. Audio is processed locally, in your browser.'
-                },
-                {
-                    tab: 'editor', target: 'waveform', place: 'bottom', title: 'Slice it',
-                    body: 'Your sample shows up here. <b>Double-click</b> the waveform to drop a slice at that spot, then select a slice and drag its edges to fine-tune it.' +
-                          '<div class="kt-note">The ▶ and ■ buttons in the corner play the whole sample.</div>'
-                },
-                {
-                    tab: 'editor', target: 'detect', place: 'right', title: 'Or let Kerf find the hits',
-                    body: '<b>Auto Detect</b> slices the sample at every transient — drum hits, notes, syllables. Use <b>Transient Sensitivity</b> to get more or fewer slices, and <b>Clear</b> to start over.'
-                },
-                {
-                    tab: 'editor', target: 'slices', place: 'left', title: 'Shape every slice',
-                    body: 'Each slice gets a card with its own note. Expand it to set <b>Pitch</b>, <b>Vol</b>, <b>Pan</b>, <b>Start/End</b> and fades, or pick <b>Shot</b> (plays once) or <b>Loop</b>.' +
-                          '<div class="kt-note">Edits retrigger the slice instantly, so you hear every change.</div>'
-                },
-                {
-                    tab: 'editor', target: 'effects', place: 'top', title: 'Add some dirt',
-                    body: 'Four pedals in series: <b>Comp → Bits → Drive → Reverb</b>. Drag a knob, or scroll over it, to turn it. The LED switches a pedal on or off, and <b>Bypass</b> turns the whole rack off.'
-                },
-                {
-                    tab: 'editor', target: 'midi', place: 'right', title: 'Two ways to play',
-                    body: '<b>Trigger</b>: each key fires a different slice — great for drum kits. <b>Sampler</b>: one slice is spread across the keyboard at different pitches. Plug in a MIDI controller and the status below shows when it connects.'
-                },
-                {
-                    tab: 'editor', target: 'keyboard', place: 'top', title: 'Play it',
-                    body: 'Use your computer keyboard: <kbd>A</kbd>–<kbd>L</kbd> on the home row and <kbd>W</kbd>–<kbd>P</kbd> above it. Each key plays one slice, from left to right. You can also click the keys on screen.'
-                },
-                {
-                    tab: 'sequencer', target: 'sequencer', place: 'bottom', title: 'Sequencer tab: build a pattern',
-                    body: 'Every slice gets a row of steps. Click a step to switch it on; click again for a <b>triple-hit roll</b> (magenta); once more to clear it. Set <b>BPM</b>, <b>Swing</b> and step count, then press ▶. <b>M</b> and <b>S</b> mute or solo a row.' +
-                          '<div class="kt-note">The grid appears as soon as your sample has slices.</div>'
-                },
-                {
-                    tab: 'sequencer', target: 'scenes', place: 'bottom', title: 'Eight scenes',
-                    body: 'Keep up to eight patterns and jump between them with the numbered buttons or the <kbd>1</kbd>–<kbd>8</kbd> keys. While playing, the next scene starts at the end of the loop. <b>Shift+click</b> copies the current pattern into a scene; ▶ plays every filled scene in order.'
-                },
-                {
-                    tab: 'editor', target: 'save', place: 'bottom', title: 'Keep your work', next: 'Finish',
-                    body: '<b>Save Project</b> bundles your sample, slices, patterns and settings into a .zip; <b>Load Project</b> brings it all back. <b>Export WAV</b>, in the Editor sidebar, renders audio files.' +
-                          '<div class="kt-note">That’s the tour! Restart it any time with the <b>?</b> button.</div>'
-                }
-            ];
-            const LAST = steps.length - 1;
+            // Um tour por separador: o "?" abre o tour do separador que está ativo.
+            // Só o tour do Editor tem um passo de boas-vindas (center: true) — é o que abre na primeira visita.
+            const tours = {
+                editor: [
+                    {
+                        center: true, title: 'Welcome to Kerf', next: 'Start tour', skip: 'Skip',
+                        body: 'Kerf chops any sound into slices you can play, sequence and mangle — right in your browser.' +
+                              '<div class="kt-note">This takes about a minute. Leave any time. Every tab has its own tour: press the <b>?</b> button in the top bar to replay the one for the tab you are on.</div>'
+                    },
+                    {
+                        target: 'import', place: 'right', title: 'Bring in a sound',
+                        body: 'Click <b>+ Import</b> to load an audio file, or hit <b>REC</b> to record from your microphone. Audio is processed locally, in your browser.'
+                    },
+                    {
+                        target: 'waveform', place: 'bottom', title: 'Slice it',
+                        body: 'Your sample shows up here. <b>Double-click</b> the waveform to drop a slice at that spot, then select a slice and drag its edges to fine-tune it.' +
+                              '<div class="kt-note">The ▶ and ■ buttons in the corner play the whole sample.</div>',
+                        m: {
+                            body: 'Your sample shows up here. <b>Double-tap</b> the waveform to drop a slice there. <b>Tap</b> a slice to select it, then drag its edges to fine-tune it. When zoomed in, swipe to scroll.' +
+                                  '<div class="kt-note">The ▶ and ■ buttons in the corner play the whole sample.</div>'
+                        }
+                    },
+                    {
+                        target: 'detect', place: 'right', title: 'Or let Kerf find the hits',
+                        body: '<b>Auto Detect</b> slices the sample at every transient — drum hits, notes, syllables. Use <b>Transient Sensitivity</b> to get more or fewer slices, and <b>Clear</b> to start over.'
+                    },
+                    {
+                        target: 'slices', place: 'left', title: 'Shape every slice',
+                        body: 'Each slice gets a card with its own note. Expand it to set <b>Pitch</b>, <b>Vol</b>, <b>Pan</b>, <b>Start/End</b> and fades, or pick <b>Shot</b> (plays once) or <b>Loop</b>.' +
+                              '<div class="kt-note">Edits retrigger the slice instantly, so you hear every change.</div>',
+                        m: {
+                            target: 'mslices', place: 'top',
+                            body: 'This button opens your <b>slices</b>. Each one gets a card: expand it to set <b>Pitch</b>, <b>Vol</b>, <b>Pan</b>, <b>Start/End</b> and fades, or pick <b>Shot</b> (plays once) or <b>Loop</b>.'
+                        }
+                    },
+                    {
+                        target: 'effects', place: 'top', title: 'Add some dirt',
+                        body: 'Four pedals in series: <b>Comp → Bits → Drive → Reverb</b>. Drag a knob, or scroll over it, to turn it. The LED switches a pedal on or off, and <b>Bypass</b> turns the whole rack off.',
+                        m: {
+                            target: 'mseg', place: 'bottom',
+                            body: 'Switch to <b>FX</b> for four pedals in series: <b>Comp → Bits → Drive → Reverb</b>. Drag a knob up or down to turn it. The LED switches a pedal on or off, and <b>Bypass</b> turns the whole rack off.'
+                        }
+                    },
+                    {
+                        target: 'midi', place: 'right', title: 'Two ways to play',
+                        body: '<b>Trigger</b>: each key fires a different slice — great for drum kits. <b>Sampler</b>: one slice is spread across the keyboard at different pitches. Plug in a MIDI controller and the status below shows when it connects.'
+                    },
+                    {
+                        target: 'keyboard', place: 'top', title: 'Play it',
+                        body: 'Use your computer keyboard: <kbd>A</kbd>–<kbd>L</kbd> on the home row and <kbd>W</kbd>–<kbd>P</kbd> above it. Each key plays one slice, from left to right. You can also click the keys on screen.',
+                        m: {
+                            target: 'mpads', place: 'top',
+                            body: 'This button opens <b>16 pads</b>, one per slice. Tap to play; Loop slices play while you hold. Tap it again to hide them.'
+                        }
+                    },
+                    {
+                        target: 'save', place: 'bottom', title: 'Keep your work', next: 'Finish',
+                        body: '<b>Save Project</b> bundles your sample, slices, patterns and settings into a .zip; <b>Load Project</b> brings it all back. <b>Export WAV</b>, in the Editor sidebar, renders audio files.' +
+                              '<div class="kt-note">Next up: the <b>Sequencer</b> and <b>Multi-Tempo</b> tabs each have their own tour under the <b>?</b> button.</div>',
+                        m: {
+                            target: 'mmenu',
+                            body: '<b>Save Project</b> and <b>Load Project</b> live in this menu, with the theme and the <b>?</b> tour button. Save bundles your sample, slices, patterns and settings into a .zip. <b>Export WAV</b> is in the Sample panel.'
+                        }
+                    }
+                ],
+                sequencer: [
+                    {
+                        target: 'seqgrid', place: 'bottom', title: 'Sequencer tab: build a pattern',
+                        body: 'Every slice gets a row of steps. Click a step to switch it on; click again for a <b>triple-hit roll</b> (magenta); once more to clear it. <b>M</b> and <b>S</b> mute or solo a row.' +
+                              '<div class="kt-note">The grid appears as soon as your sample has slices.</div>'
+                    },
+                    {
+                        target: 'seqcontrols', place: 'bottom', title: 'Tempo, feel and playback',
+                        body: 'Set the <b>BPM</b>, add <b>Swing</b>, and pick how many <b>Steps</b> the pattern has (8 to 32 — handy for 3/4, 5/4 or 7/4). Press ▶ to play and ■ to stop, <b>CLEAR</b> to wipe the pattern, or <b>Export</b> to render the loop to audio.'
+                    },
+                    {
+                        target: 'scenes', place: 'bottom', title: 'Eight scenes', next: 'Finish',
+                        body: 'Keep up to eight patterns and jump between them with the numbered buttons or the <kbd>1</kbd>–<kbd>8</kbd> keys. While playing, the next scene starts at the end of the loop. <b>Shift+click</b> copies the current pattern into a scene; ▶ plays every filled scene in order.' +
+                              '<div class="kt-note">Press <kbd>Space</kbd> to stop the sequencer at any time.</div>'
+                    }
+                ],
+                multitempo: [
+                    {
+                        target: 'mtgrid', place: 'bottom', title: 'Multi-Tempo tab: one clock per slice',
+                        body: 'Every slice gets its own card with its own <b>BPM</b> and <b>Volume</b>. Switch a card <b>On</b> and its slice fires once per beat at that tempo — independent from all the others, so the slices drift in and out of phase.' +
+                              '<div class="kt-note">The cards appear as soon as your sample has slices.</div>'
+                    },
+                    {
+                        target: 'mttransport', place: 'bottom', title: 'Play and record', next: 'Finish',
+                        body: '▶ starts every card that is switched on and ■ stops them. Hit <b>REC</b> to capture what you hear as a WAV file.'
+                    }
+                ]
+            };
+            let steps = tours.editor;
+            let LAST = steps.length - 1;
 
             let overlay = null, spot = null, card = null;
-            let idx = 0, returnTab = 'editor', returnFocus = null;
+            let idx = 0, returnFocus = null;
 
             const seen = () => { try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch (_) { return false; } };
             const markSeen = () => { try { localStorage.setItem(STORAGE_KEY, '1'); } catch (_) { /* modo privado */ } };
@@ -5846,9 +6389,6 @@
 
             function activeTab() {
                 return document.querySelector('.tab-btn.active')?.dataset.tab || 'editor';
-            }
-            function showTab(name) {
-                if (name && activeTab() !== name) document.querySelector(`.tab-btn[data-tab="${name}"]`)?.click();
             }
 
             // União dos retângulos de todos os elementos visíveis com esta chave (ou null)
@@ -5906,19 +6446,19 @@
 
             function render() {
                 const s = steps[idx];
+                const intro = steps[0].center ? 1 : 0; // o passo de boas-vindas não conta como "Step N"
                 card.classList.toggle('kt-center', !!s.center);
                 card.innerHTML =
-                    (idx > 0 ? `<div class="kt-count">Step ${idx} of ${LAST}</div>` : '') +
+                    (!s.center ? `<div class="kt-count">Step ${idx + 1 - intro} of ${steps.length - intro}</div>` : '') +
                     `<div class="kt-title" id="ktTitle">${s.title}</div>` +
                     `<div class="kt-body" id="ktBody">${s.body}</div>` +
-                    `<div class="kt-progress" aria-hidden="true"><div style="width:${(idx / LAST) * 100}%"></div></div>` +
+                    `<div class="kt-progress" aria-hidden="true"><div style="width:${((idx + 1 - intro) / (steps.length - intro)) * 100}%"></div></div>` +
                     '<div class="kt-actions">' +
                         (idx < LAST ? `<button class="kt-skip" data-kt="skip">${s.skip || 'Skip tour'}</button>` : '') +
                         '<span class="kt-spacer"></span>' +
                         (idx > 0 ? '<button class="kt-btn" data-kt="back">Back</button>' : '') +
                         `<button class="kt-btn kt-primary" data-kt="next">${s.next || 'Next'}</button>` +
                     '</div>';
-                showTab(s.tab); // troca síncrona (classes); getBoundingClientRect força o reflow
                 layout();
                 card.focus({ preventScroll: true });
             }
@@ -5937,7 +6477,6 @@
                 window.removeEventListener('resize', layout);
                 overlay.remove();
                 overlay = spot = card = null;
-                showTab(returnTab);
                 if (returnFocus && document.contains(returnFocus)) returnFocus.focus({ preventScroll: true });
             }
 
@@ -5959,9 +6498,13 @@
                 }
             }
 
-            function start() {
+            // Abre o tour do separador indicado (por omissão, o que está ativo)
+            function start(tab) {
                 if (overlay) return;
-                returnTab = activeTab();
+                steps = tours[typeof tab === 'string' ? tab : activeTab()] || tours.editor;
+                // No telemóvel alguns passos apontam para outros alvos (botões flutuantes, menu)
+                if (window.isKerfMobile && isKerfMobile()) steps = steps.map(s => s.m ? { ...s, ...s.m } : s);
+                LAST = steps.length - 1;
                 returnFocus = document.activeElement;
 
                 overlay = document.createElement('div');
@@ -5984,10 +6527,11 @@
                 go(0);
             }
 
-            document.getElementById('tourBtn')?.addEventListener('click', start);
+            document.getElementById('tourBtn')?.addEventListener('click', () => start());
             window.kerfTour = { start };
 
-            if (!seen()) setTimeout(start, 800);
+            // Primeira visita: a app abre no Editor, por isso é o tour do Editor que arranca
+            if (!seen()) setTimeout(() => start('editor'), 800);
         })();
     </script>
 </body>
