@@ -4501,8 +4501,9 @@
         }
 
         function handleMidiMessage(msg) {
-            const [cmd, note, velocity] = msg.data;
-            
+            const [status, note, velocity] = msg.data;
+            const cmd = status & 0xF0; // ignorar o canal (nibble baixo): aceitar todos os 16 canais
+
             // Visual feedback - flash status dot
             const midiStatusDot = document.getElementById('midiStatusDot');
             if (midiStatusDot) {
