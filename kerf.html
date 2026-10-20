@@ -5539,13 +5539,18 @@
             const zip = new JSZip();
             const audioFileName = document.getElementById('fileName').textContent;
 
-            // Save audio file
-            const audioData = state.audioBuffer.getChannelData(0);
-            const wavBuffer = encodeWavFile(Array.from(audioData), state.audioBuffer.sampleRate);
-            zip.file('audio.' + audioFileName.split('.').pop(), new Blob([wavBuffer]));
+            // Save audio file (WAV stereo; mono duplica o canal 0)
+            const buf = state.audioBuffer;
+            const audioL = buf.getChannelData(0);
+            const audioR = buf.numberOfChannels > 1 ? buf.getChannelData(1) : audioL;
+            zip.file('audio.wav', encodeWAVStereo([audioL], [audioR], buf.length, buf.sampleRate));
+
+            // Garantir que a cena atual está sincronizada com os aliases
+            saveCurrentScene();
 
             // Save project metadata
             const projectData = {
+                version: 2,
                 audioFileName: audioFileName,
                 bpm: state.bpm,
                 swingAmount: state.swingAmount,
@@ -5560,9 +5565,19 @@
                     fadeIn: s.fadeIn,
                     fadeOut: s.fadeOut
                 })),
+                // Todas as 8 cenas (pattern, mute, solo, stepCount, bpm)
+                scenes: state.scenes.map(sc => ({
+                    pattern: sc.pattern,
+                    mute: sc.mute,
+                    solo: sc.solo,
+                    stepCount: sc.stepCount,
+                    bpm: sc.bpm
+                })),
+                currentScene: state.currentScene,
+                // Mantido para compatibilidade com versões antigas
                 sequencerPattern: state.sequencerPattern,
                 effects: state.effects,
-                waveformCache: state.waveformCache,  // 🆕 Guardar cache pre-computed
+                // waveformCache não é guardado: é regenerado no load
                 multiTempoSlices: state.multiTempoSlices.map(mt => ({
                     sliceIdx: mt.sliceIdx,
                     bpm: mt.bpm,
@@ -5619,12 +5634,28 @@
                 state.bpm = projectData.bpm;
                 state.swingAmount = projectData.swingAmount;
                 state.slices = projectData.slices;
-                state.sequencerPattern = projectData.sequencerPattern;
-                
-                // 🆕 Restaurar waveform cache se existir
-                if (projectData.waveformCache) {
-                    state.waveformCache = projectData.waveformCache;
-                }
+
+                // Restaurar as 8 cenas. Projetos antigos só têm sequencerPattern → vai para a cena 1
+                const savedScenes = Array.isArray(projectData.scenes) ? projectData.scenes : null;
+                state.scenes = Array.from({length: 8}, (_, i) => {
+                    const sc = savedScenes ? savedScenes[i] : (i === 0 ? {
+                        pattern: projectData.sequencerPattern,
+                        bpm: projectData.bpm
+                    } : null);
+                    return {
+                        pattern:   (sc && sc.pattern) || {},
+                        mute:      (sc && sc.mute) || {},
+                        solo:      (sc && sc.solo) || {},
+                        stepCount: (sc && sc.stepCount) || 16,
+                        bpm:       (sc && sc.bpm) || 120
+                    };
+                });
+                const sceneIdx = savedScenes && projectData.currentScene >= 0 && projectData.currentScene < 8
+                    ? projectData.currentScene : 0;
+                loadScene(sceneIdx); // aliases (sequencerPattern/Mute/Solo) apontam para state.scenes
+
+                // Waveform cache é sempre regenerado a partir do áudio
+                state.waveformCache = generateWaveformCache(state.audioBuffer);
                 
                 // Restore effects if they exist in the project
                 if (projectData.effects) {
