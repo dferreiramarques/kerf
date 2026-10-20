@@ -5382,31 +5382,42 @@
             const ctx = initAudioContext();
             const stepDuration = (60 / state.bpm) * 1000 / 4; // 16th notes em ms
             const stepDurationSeconds = stepDuration / 1000;
-            const loopDurationSeconds = stepDurationSeconds * 16; // 16 steps
+            const stepCount = state.stepCount;
+            // Tempos de início de cada step com swing, igual ao scheduler ao vivo
+            // (após cada step ímpar soma-se o offset de swing)
+            const stepStartTimes = [];
+            let t = 0;
+            for (let step = 0; step < stepCount; step++) {
+                stepStartTimes.push(t);
+                const swingOffset = step % 2 === 1 ? stepDurationSeconds * (state.swingAmount / 100) * 0.33 : 0;
+                t += stepDurationSeconds + swingOffset;
+            }
+            const loopDurationSeconds = t;
             const sampleRate = state.audioBuffer.sampleRate;
             const totalSamples = Math.ceil(loopDurationSeconds * sampleRate);
 
-            // Create offline context para renderizar
-            const offlineCtx = new OfflineAudioContext(1, totalSamples, sampleRate);
+            // Create offline context para renderizar (stereo para manter o pan)
+            const offlineCtx = new OfflineAudioContext(2, totalSamples, sampleRate);
 
             // Para cada step, agrega os sounds
-            for (let step = 0; step < 16; step++) {
-                const stepStartTime = step * stepDurationSeconds;
+            for (let step = 0; step < stepCount; step++) {
+                const stepStartTime = stepStartTimes[step];
 
                 state.slices.forEach((slice, sliceIdx) => {
+                    if (!state.sequencerPattern[sliceIdx]) return;
                     // Verificar mute/solo
                     const anySolo = Object.values(state.sequencerSolo).some(v => v);
                     if (anySolo && !state.sequencerSolo[sliceIdx]) return;
                     if (state.sequencerMute[sliceIdx]) return;
-                    
+
                     const stepState = state.sequencerPattern[sliceIdx][step];
 
                     if (stepState === 'trigger') {
                         playSliceOffline(offlineCtx, sliceIdx, stepStartTime, false);
                     } else if (stepState === 'flame') {
-                        // Flame: 4 repeats em fusas
-                        for (let repeat = 0; repeat < 4; repeat++) {
-                            const repeatStartTime = stepStartTime + (repeat * stepDurationSeconds / 4);
+                        // Flame: 3 disparos em tercinas, como no playback ao vivo
+                        for (let repeat = 0; repeat < 3; repeat++) {
+                            const repeatStartTime = stepStartTime + (repeat * stepDurationSeconds / 3);
                             playSliceOffline(offlineCtx, sliceIdx, repeatStartTime, false);
                         }
                     }
@@ -5415,11 +5426,11 @@
 
             // Render
             offlineCtx.startRendering().then((renderedBuffer) => {
-                // Apply effects to rendered buffer
-                let audioData = Array.from(renderedBuffer.getChannelData(0));
-                audioData = applyEffects(audioData);
+                // Apply effects to rendered buffer (por canal)
+                const left = Float32Array.from(applyEffects(Array.from(renderedBuffer.getChannelData(0))));
+                const right = Float32Array.from(applyEffects(Array.from(renderedBuffer.getChannelData(1))));
 
-                const wav = encodeWavFile(audioData, sampleRate);
+                const wav = encodeWAVStereo([left], [right], renderedBuffer.length, sampleRate);
 
                 const audioFileName = document.getElementById('fileName').textContent.split('.')[0];
                 const filename = `${audioFileName}_sequencer_loop.wav`;
