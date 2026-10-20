@@ -4258,7 +4258,15 @@
 
 
         // === KEYBOARD EVENTS ===
+        // Não disparar atalhos enquanto se escreve num campo (ex: BPM "120" mudava de cena)
+        function isTypingTarget(el) {
+            if (!el) return false;
+            const tag = el.tagName;
+            return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || el.isContentEditable;
+        }
+
         document.addEventListener('keydown', (e) => {
+            if (isTypingTarget(e.target)) return;
             // Ignorar auto-repeat do SO: 1 trigger por pressão, novo trigger só ao premir de novo
             if (e.repeat) return;
 
@@ -4322,6 +4330,7 @@
         });
 
         document.addEventListener('keyup', (e) => {
+            if (isTypingTarget(e.target)) return;
             if (state.midiMode === 'sampler') {
                 // Sampler mode: piano layout
                 const pianoMap = {
