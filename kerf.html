@@ -2847,6 +2847,7 @@
                 updateSampleInfo(filename);
                 drawWaveform();
                 state.slices = [];
+                resetScenePatterns();
                 updateSlicesList();
                 initSequencerGrid();
             } catch (err) {
@@ -2877,8 +2878,11 @@
         // DELETE SAMPLE BUTTON
         document.getElementById('deleteSampleBtn').addEventListener('click', () => {
             if (confirm('Delete sample? This will clear all slices.')) {
+                stopAllPlayback();
                 state.audioBuffer = null;
                 state.slices = [];
+                resetScenePatterns();
+                initSequencerGrid();
                 state.selectedSliceIdx = -1;
                 document.getElementById('sampleInfo').style.display = 'none';
                 document.getElementById('audioFile').value = '';
@@ -4118,12 +4122,72 @@
             state.slices[idx].pitch = pitch;
         }
 
+        // Reindexar um objeto { sliceIdx: ... } depois de apagar a slice `idx`
+        function reindexAfterDelete(obj, idx) {
+            const out = {};
+            Object.keys(obj).forEach(k => {
+                const n = parseInt(k);
+                if (isNaN(n) || n < idx) out[k] = obj[k];
+                else if (n > idx) out[n - 1] = obj[k];
+            });
+            return out;
+        }
+
+        // Re-apontar os aliases do sequencer para a cena atual
+        function refreshSceneAliases() {
+            const scene = state.scenes[state.currentScene];
+            state.sequencerPattern = scene.pattern;
+            state.sequencerMute    = scene.mute;
+            state.sequencerSolo    = scene.solo;
+        }
+
+        // Limpar patterns/mute/solo de todas as cenas (novo sample = slices novas)
+        function resetScenePatterns() {
+            state.scenes.forEach(scene => {
+                scene.pattern = {};
+                scene.mute = {};
+                scene.solo = {};
+            });
+            refreshSceneAliases();
+            state.multiTempoSlices = [];
+            updateSceneButtons();
+        }
+
+        // Parar tudo: sequencer, multi-tempo, áudio completo e slices a tocar
+        function stopAllPlayback() {
+            if (state.isSequencerPlaying) stopSequencer();
+            if (state.multiTempoPlaying) {
+                state.multiTempoPlaying = false;
+                if (state.multiTempoIntervalId) clearTimeout(state.multiTempoIntervalId);
+                document.querySelectorAll('.multitempo-card.active').forEach(card => {
+                    card.classList.remove('active', 'playing');
+                });
+                document.getElementById('multiTempoPlayBtn').classList.remove('active');
+            }
+            stopFullAudio();
+            Object.keys(state.playingSources).forEach(k => stopSlice(k));
+        }
+
         function deleteSlice(idx) {
-            stopSlice(idx);
+            // As sources a tocar estão indexadas por slice: parar todas antes de reindexar
+            Object.keys(state.playingSources).forEach(k => stopSlice(k));
             state.slices.splice(idx, 1);
             state.selectedSlice = null;
+
+            // Patterns, mute, solo e multi-tempo estão indexados por slice → reindexar
+            saveCurrentScene();
+            state.scenes.forEach(scene => {
+                scene.pattern = reindexAfterDelete(scene.pattern, idx);
+                scene.mute    = reindexAfterDelete(scene.mute, idx);
+                scene.solo    = reindexAfterDelete(scene.solo, idx);
+            });
+            refreshSceneAliases();
+            state.multiTempoSlices = state.multiTempoSlices.filter(mt => mt.sliceIdx !== idx);
+            state.multiTempoSlices.forEach(mt => { if (mt.sliceIdx > idx) mt.sliceIdx--; });
+
             updateSlicesList();
             initSequencerGrid();
+            updateSceneButtons();
             drawWaveform();
         }
 
@@ -5808,6 +5872,7 @@
 
                                     updateSampleInfo('rec_' + Date.now() + '.wav');
                                     state.slices = [];
+                                    resetScenePatterns();
                                     updateSlicesList();
                                     initSequencerGrid();
                                     initKeyboard();
