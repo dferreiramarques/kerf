@@ -3993,14 +3993,6 @@
             list.innerHTML = '';
             document.getElementById('sliceCount').textContent = state.slices.length;
 
-            console.log('📝 updateSlicesList() called');
-            console.log('slices.length:', state.slices.length);
-            console.log('audioBuffer:', state.audioBuffer);
-
-            if (!state.audioBuffer) {
-                console.warn('⚠️ No audioBuffer, rendering slices without duration');
-            }
-
             state.slices.forEach((slice, idx) => {
                 const item = document.createElement('div');
                 item.className = `slice-item slice-item-${idx}`;
@@ -4088,11 +4080,8 @@
                     drawWaveform();
                 });
                 list.appendChild(item);
-                console.log(`✅ Slice ${idx} rendered`);
             });
 
-            console.log('✅ updateSlicesList() completed');
-            
             // Reinitialize keyboard quando há slices
             if (state.slices.length > 0) {
                 initKeyboard();
