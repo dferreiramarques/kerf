@@ -3943,7 +3943,12 @@
                 }
             }
 
-            const maxVal = Math.max(...output.map(Math.abs));
+            // Loop em vez de spread: Math.max(...arr) rebenta a stack em arrays grandes
+            let maxVal = 0;
+            for (let i = 0; i < output.length; i++) {
+                const a = Math.abs(output[i]);
+                if (a > maxVal) maxVal = a;
+            }
             if (maxVal > 1) {
                 output = output.map(s => s / maxVal);
             }
