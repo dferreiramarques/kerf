@@ -1,4 +1,4 @@
-# Kerf — Professional Sample Slicer & Sequencer
+# Kerf — Sample Slicer & Sequencer
 
 A browser-based sample slicer and 16-step sequencer with effects chain, built with ethical AI as a core philosophy.
 
@@ -32,6 +32,10 @@ A browser-based sample slicer and 16-step sequencer with effects chain, built wi
 ### Desktop (Windows installer)
 
 Download the native Windows build from [kerf.monco.io](https://kerf.monco.io) — no browser required.
+
+### Kerf Lite (VST3, beta)
+
+A free VST3 instrument for Windows 10/11 (x64) with just the Slicer from the web app — no sequencer and no effects chain. Get the installer at [kerf.monco.io](https://kerf.monco.io); source and build notes are in [`plugin/`](plugin/README.md).
 
 ### Local Development
 
@@ -122,7 +126,11 @@ kerf/
 ├── kerf.html             # The app itself (PWA entry point)
 ├── manifest.json        # PWA configuration
 ├── service-worker.js    # Offline support
-├── downloads/            # Windows installer builds (.exe / .msi)
+├── vendor/              # JSZip and the Tauri plugin bundle
+├── scripts/             # Build helpers for the desktop app
+├── src-tauri/           # Windows desktop app (Tauri)
+├── plugin/              # Kerf Lite VST3 (JUCE, its own CMake project)
+├── downloads/           # Windows installers: desktop app and Kerf Lite VST3
 └── README.md           # This file
 ```
 
@@ -135,9 +143,11 @@ kerf/
 
 Web Audio API, File API, and Service Workers required.
 
+MIDI controllers need Web MIDI: Chrome, Edge or Firefox. Safari doesn't support it, so on Safari play the slices from the computer keyboard.
+
 ## Design Philosophy
 
-**Ethical use of AI**: Spliiice is vibe-coded from scratch with Claude.ai as ideation and coding partner. The tool prioritizes:
+**Ethical use of AI**: Kerf is vibe-coded from scratch with Claude.ai as ideation and coding partner. The tool prioritizes:
 - User control over automation
 - Transparent parameter behavior
 - Live feedback on all actions

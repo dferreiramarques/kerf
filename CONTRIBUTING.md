@@ -1,13 +1,13 @@
-# Contributing to Spliiice
+# Contributing to Kerf
 
-Thanks for your interest in Spliiice! This document outlines the development workflow and upcoming features.
+Thanks for your interest in Kerf! This document outlines the development workflow and upcoming features.
 
 ## Development Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/dmarques/spliiice.git
-cd spliiice
+git clone https://github.com/dferreiramarques/kerf.git
+cd kerf
 
 # Install dependencies (optional, for local serving)
 npm install
@@ -19,9 +19,9 @@ npm run dev
 
 ## Current Status
 
-**Version 1.0.0 - Desktop Optimized**
+**Desktop optimized (beta)**
 
-Spliiice is currently fully optimized for **desktop and larger screens** with a comprehensive feature set including:
+Kerf is currently fully optimized for **desktop and larger screens** with a comprehensive feature set including:
 - Full audio slicing and sample manipulation
 - Real-time effects chain
 - Dual MIDI modes (Trigger & Sampler)
@@ -29,7 +29,7 @@ Spliiice is currently fully optimized for **desktop and larger screens** with a 
 - PWA installation support
 - Service Worker for offline functionality
 
-## Roadmap - Next Version (V1.1+)
+## Roadmap - Next Version
 
 ### Mobile UI Redesign (Priority: HIGH)
 
@@ -75,8 +75,8 @@ Spliiice is currently fully optimized for **desktop and larger screens** with a 
 ### File Structure for Mobile Features
 
 ```
-spliiice/
-├── index.html           # Contains responsive CSS
+kerf/
+├── kerf.html            # Contains responsive CSS
 ├── service-worker.js    # No changes needed
 ├── manifest.json        # Add orientation: "portrait-primary"
 ├── README.md           # Update mobile section
@@ -169,4 +169,4 @@ Open an issue or contact: hello@monco.io
 
 ---
 
-**Remember**: Spliiice is built with ethical AI as a core philosophy. Keep decisions human-centered and user-focused.
+**Remember**: Kerf is built with ethical AI as a core philosophy. Keep decisions human-centered and user-focused.

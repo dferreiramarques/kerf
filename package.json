@@ -1,7 +1,7 @@
 {
   "name": "kerf",
   "version": "1.0.0",
-  "description": "Kerf — professional browser-based sample slicer and 16-step sequencer with effects chain (anteriormente Spliiice)",
+  "description": "Kerf — browser-based sample slicer and 16-step sequencer with effects chain",
   "main": "kerf.html",
   "scripts": {
     "start": "http-server -p 8000 -o",

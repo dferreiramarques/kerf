@@ -1,7 +1,7 @@
 {
-  "name": "Kerf — Professional Sample Slicer",
+  "name": "Kerf — Sample Slicer & Sequencer",
   "short_name": "Kerf",
-  "description": "Professional browser-based sample slicer and 16-step sequencer with effects chain",
+  "description": "Browser-based sample slicer and 16-step sequencer with effects chain",
   "start_url": "./kerf.html",
   "scope": "./",
   "display": "standalone",
