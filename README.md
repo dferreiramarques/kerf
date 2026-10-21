@@ -163,7 +163,23 @@ MIDI controllers need Web MIDI: Chrome, Edge or Firefox. Safari doesn't support 
 - Mobile-safe waveform display
 - Swipe gestures for navigation
 
-Current version is **desktop-optimized only**.
+The Editor tab has a mobile layout; the rest of the app is still desktop-first.
+
+## Releasing
+
+Releases are built by CI. Bump the version in `plugin/CMakeLists.txt`, `plugin/installer/KerfLite.iss`,
+`src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` (plus the `kerf` entry in `src-tauri/Cargo.lock`),
+add the changes to [CHANGELOG.md](CHANGELOG.md), commit, then push a matching tag:
+
+```
+git tag -a v0.1.2 -m "Kerf 0.1.2"
+git push origin main v0.1.2
+```
+
+`.github/workflows/release.yml` then builds and tests Kerf Lite on a Windows runner, builds its installer,
+the raw .vst3 zip and the desktop app, publishes a GitHub release, and commits the files to `downloads/`
+with `index.html` pointing at them - which is what kerf.monco.io serves. If any step fails, nothing is
+published and the site keeps the previous version.
 
 ## License
 

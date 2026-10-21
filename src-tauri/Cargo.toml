@@ -1,6 +1,6 @@
 [package]
 name = "kerf"
-version = "0.1.0"
+version = "0.1.1"
 description = "Kerf — sample slicer and 16-step sequencer with effects chain"
 authors = ["David Marques"]
 license = "MIT"
