@@ -8,9 +8,12 @@ const urlsToCache = [
   './vendor/jszip.min.js'
 ];
 
-// Nunca guardar em cache instaladores/arquivos grandes
+// Nunca guardar em cache instaladores/arquivos grandes, nem a roadmap (tem de estar sempre atual)
+// nem as imagens da página (index.html)
 function isNeverCached(url) {
   return url.pathname.includes('/downloads/') ||
+    url.pathname.includes('/images/') ||
+    url.hostname === 'roadmaps.monco.io' ||
     /\.(exe|msi|zip)$/i.test(url.pathname);
 }
 
