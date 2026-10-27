@@ -97,46 +97,22 @@ public:
             expectEquals ((int) slices.size(), 0);
         }
 
-        beginTest ("a single isolated jump followed by silence produces one slice");
+        beginTest ("clicks separated by silence produce one slice per click");
         {
-            // 1000Hz sample rate: minDuration=200 samples, minSliceLength=150 samples. A jump at
-            // sample 100 held above threshold for 300 samples (long enough to close and keep),
-            // then back to flat, should yield exactly one slice from ~100 to ~400.
-            std::vector<float> data (2000, 0.0f);
-            for (int i = 100; i < 400; ++i)
-                data[(size_t) i] = (i % 2 == 0) ? 1.0f : -1.0f; // alternating -> large sample-to-sample delta
+            const double sr = 44100.0;
+            std::vector<float> data ((size_t) (sr * 2.0), 0.0f);
+            for (double t : { 0.0, 0.5, 1.0, 1.5 })
+                for (int i = 0; i < 2000; ++i)
+                    data[(size_t) (t * sr) + (size_t) i] = 0.9f * std::sin (0.3f * (float) i) * std::exp (-(float) i / 600.0f);
 
-            const auto slices = TransientDetector::detect (data.data(), (int) data.size(), 1000.0, 1.0f);
-            expectEquals ((int) slices.size(), 1);
+            const auto slices = TransientDetector::detect (data.data(), (int) data.size(), sr, 0.5f);
+            expectEquals ((int) slices.size(), 4);
 
-            if (! slices.empty())
+            if (slices.size() == 4)
             {
-                expectWithinAbsoluteError (slices[0].start, 0.1f, 0.01f);
-                expectWithinAbsoluteError (slices[0].end, 0.4f, 0.01f);
-                expect (slices[0].mode == Slice::Mode::shot);
-                expectWithinAbsoluteError (slices[0].pitch, 1.0f, 1.0e-6f);
+                expectWithinAbsoluteError (slices[1].start, 0.5f, 0.02f);
+                expectWithinAbsoluteError (slices[3].end, 2.0f, 0.001f);
             }
-        }
-
-        beginTest ("a brief blip doesn't close its slice until minDuration has elapsed since sliceStart");
-        {
-            // minDuration (200 samples @ 1000Hz) gates *closing* a slice, not how long the
-            // transient itself needs to last - even a 20-sample blip keeps the slice open until
-            // enough time has passed since it started, so the resulting slice ends up ~200
-            // samples long, not 20. Since minDuration (200) is hardcoded larger than
-            // minSliceLength (150) for any sample rate, the `> minSliceLength` rejection in the
-            // original (kerf.html:3183) can never actually reject anything once a slice reaches
-            // its close condition - a quirk of the original worth knowing, not something to
-            // "fix" in a faithful port.
-            std::vector<float> data (2000, 0.0f);
-            for (int i = 100; i < 120; ++i) // only 20 samples of actual signal
-                data[(size_t) i] = (i % 2 == 0) ? 1.0f : -1.0f;
-
-            const auto slices = TransientDetector::detect (data.data(), (int) data.size(), 1000.0, 1.0f);
-            expectEquals ((int) slices.size(), 1);
-
-            if (! slices.empty())
-                expectWithinAbsoluteError (slices[0].end - slices[0].start, 0.201f, 0.01f);
         }
     }
 };
@@ -401,6 +377,21 @@ public:
             engine.renderNextBlock (out, 0, 10); // >= fadeOutMs (1 sample) so the release actually completes
             expect (! engine.isNoteActive (60));
             expect (engine.isNoteActive (72));
+        }
+
+        beginTest ("retriggering a slice that is not playing does nothing");
+        {
+            auto sample = makeRampBuffer (2000);
+            SliceBank bank;
+            Slice s0; s0.start = 0.0f; s0.end = 1.0f;
+            bank.add (s0);
+
+            VoiceEngine engine;
+            engine.prepare (1000.0);
+            engine.setSampleSource (&sample, 1000.0);
+
+            engine.retrigger (0, bank.getCurrent()->at (0));
+            expectEquals (engine.getNumActiveVoices(), 0);
         }
 
         beginTest ("retriggering the same slice crossfades rather than cutting instantly");

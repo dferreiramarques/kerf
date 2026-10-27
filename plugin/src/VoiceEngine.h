@@ -107,6 +107,11 @@ public:
     // audio thread's command queue instead of directly from a UI callback.
     void retrigger (int sliceIndex, const Slice& slice)
     {
+        // Only follow an edit of a slice that is already sounding; editing a silent slice
+        // (creating one by dragging, moving its edges, Start/End sliders) must not start playback.
+        if (! isSliceActive (sliceIndex))
+            return;
+
         triggerMonophonicPerSlice (sliceIndex, previewNoteMarker, slice, slice.pitch);
     }
 

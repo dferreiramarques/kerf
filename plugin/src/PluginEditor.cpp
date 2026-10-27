@@ -3,6 +3,26 @@
 KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p), waveformDisplay (p)
 {
+    setLookAndFeel (&lookAndFeel);
+
+    auto styleLabel = [] (juce::Label& l, juce::Justification j)
+    {
+        l.setFont (juce::Font (juce::FontOptions (11.5f)));
+        l.setColour (juce::Label::textColourId, KerfColours::textDim);
+        l.setJustificationType (j);
+    };
+    auto knob = [] (juce::Slider& s)
+    {
+        s.setSliderStyle (juce::Slider::RotaryVerticalDrag);
+        s.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 64, 16);
+        s.setRotaryParameters (juce::degreesToRadians (225.0f), juce::degreesToRadians (495.0f), true);
+    };
+    auto bar = [] (juce::Slider& s)
+    {
+        s.setSliderStyle (juce::Slider::LinearBar);
+        s.setTextBoxStyle (juce::Slider::TextBoxLeft, false, 60, 20);
+    };
+
     addAndMakeVisible (importButton);
     importButton.onClick = [this]
     {
@@ -42,8 +62,12 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
     addAndMakeVisible (sensitivitySlider);
     sensitivitySlider.setRange (0.0, 1.0);
     sensitivitySlider.setValue (0.5);
-    sensitivitySlider.setSliderStyle (juce::Slider::LinearHorizontal);
-    sensitivitySlider.setTextBoxStyle (juce::Slider::TextBoxRight, false, 60, 20);
+    bar (sensitivitySlider);
+    sensitivitySlider.textFromValueFunction = [] (double v) { return juce::String (juce::roundToInt (v * 100.0)) + " %"; };
+    sensitivitySlider.valueFromTextFunction = [] (const juce::String& t) { return t.getDoubleValue() / 100.0; };
+    sensitivitySlider.updateText();
+    addAndMakeVisible (sensitivityLabel);
+    styleLabel (sensitivityLabel, juce::Justification::centredRight);
 
     addAndMakeVisible (autoDetectButton);
     autoDetectButton.onClick = [this]
@@ -84,23 +108,27 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
         processor.getAPVTS(), ParameterIDs::midiMode, midiModeBox);
 
     addAndMakeVisible (noteOffsetSlider);
-    noteOffsetSlider.setSliderStyle (juce::Slider::LinearHorizontal);
-    noteOffsetSlider.setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
+    knob (noteOffsetSlider);
+    styleLabel (noteOffsetLabel, juce::Justification::centred);
     addAndMakeVisible (noteOffsetLabel);
     noteOffsetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
         processor.getAPVTS(), ParameterIDs::noteOffset, noteOffsetSlider);
 
     addAndMakeVisible (masterVolumeSlider);
-    masterVolumeSlider.setSliderStyle (juce::Slider::LinearHorizontal);
-    masterVolumeSlider.setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
+    knob (masterVolumeSlider);
+    styleLabel (masterVolumeLabel, juce::Justification::centred);
     addAndMakeVisible (masterVolumeLabel);
     masterVolumeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
         processor.getAPVTS(), ParameterIDs::masterVolume, masterVolumeSlider);
 
     addAndMakeVisible (sliceIndexSlider);
     addAndMakeVisible (sliceIndexLabel);
-    sliceIndexSlider.setSliderStyle (juce::Slider::LinearHorizontal);
-    sliceIndexSlider.setTextBoxStyle (juce::Slider::TextBoxRight, false, 50, 20);
+    bar (sliceIndexSlider);
+    styleLabel (sliceIndexLabel, juce::Justification::centredRight);
+    styleLabel (midiModeLabel, juce::Justification::centredLeft);
+    styleLabel (sliceCountLabel, juce::Justification::centredRight);
+    styleLabel (sampleNameLabel, juce::Justification::centredLeft);
+    sampleNameLabel.setColour (juce::Label::textColourId, KerfColours::text);
     sliceIndexSlider.setRange (0.0, 0.0, 1.0);
     sliceIndexSlider.onValueChange = [this] { selectSlice ((int) sliceIndexSlider.getValue()); };
 
@@ -118,24 +146,36 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
         waveformDisplay.repaint();
     };
 
-    auto setupSlider = [this] (juce::Slider& slider, juce::Label& label, double minV, double maxV, double defaultV)
+    auto setupSlider = [&] (juce::Slider& slider, juce::Label& label, double minV, double maxV, double defaultV, bool isBar = false)
     {
         addAndMakeVisible (slider);
         addAndMakeVisible (label);
         slider.setRange (minV, maxV);
         slider.setValue (defaultV, juce::dontSendNotification);
-        slider.setSliderStyle (juce::Slider::LinearHorizontal);
-        slider.setTextBoxStyle (juce::Slider::TextBoxRight, false, 60, 20);
+        if (isBar)
+        {
+            bar (slider);
+            styleLabel (label, juce::Justification::centredRight);
+        }
+        else
+        {
+            knob (slider);
+            styleLabel (label, juce::Justification::centred);
+        }
     };
 
-    setupSlider (startSlider, startLabel, 0.0, 10.0, 0.0);
+    setupSlider (startSlider, startLabel, 0.0, 10.0, 0.0, true);
+    startSlider.setTextValueSuffix (" s");
+    startSlider.setNumDecimalPlacesToDisplay (3);
     startSlider.onValueChange = [this]
     {
         const auto v = (float) startSlider.getValue();
         updateCurrentSlice ([v] (Slice& s) { s.start = v; }, true);
     };
 
-    setupSlider (endSlider, endLabel, 0.0, 10.0, 1.0);
+    setupSlider (endSlider, endLabel, 0.0, 10.0, 1.0, true);
+    endSlider.setTextValueSuffix (" s");
+    endSlider.setNumDecimalPlacesToDisplay (3);
     endSlider.onValueChange = [this]
     {
         const auto v = (float) endSlider.getValue();
@@ -143,6 +183,9 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
     };
 
     setupSlider (pitchSlider, pitchLabel, 0.125, 8.0, 1.0);
+    pitchSlider.setSkewFactorFromMidPoint (1.0);
+    pitchSlider.setNumDecimalPlacesToDisplay (2);
+    pitchSlider.setTextValueSuffix (" x");
     pitchSlider.onValueChange = [this]
     {
         const auto v = (float) pitchSlider.getValue();
@@ -150,6 +193,7 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
     };
 
     setupSlider (volumeSlider, volumeLabel, 0.0, 1.0, 1.0);
+    volumeSlider.setNumDecimalPlacesToDisplay (2);
     volumeSlider.onValueChange = [this]
     {
         const auto v = (float) volumeSlider.getValue();
@@ -157,6 +201,7 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
     };
 
     setupSlider (panSlider, panLabel, -1.0, 1.0, 0.0);
+    panSlider.setNumDecimalPlacesToDisplay (2);
     panSlider.onValueChange = [this]
     {
         const auto v = (float) panSlider.getValue();
@@ -164,6 +209,8 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
     };
 
     setupSlider (fadeInSlider, fadeInLabel, 0.0, 200.0, 1.0);
+    fadeInSlider.setNumDecimalPlacesToDisplay (1);
+    fadeInSlider.setTextValueSuffix (" ms");
     fadeInSlider.onValueChange = [this]
     {
         const auto v = (float) fadeInSlider.getValue();
@@ -171,6 +218,8 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
     };
 
     setupSlider (fadeOutSlider, fadeOutLabel, 0.0, 500.0, 50.0);
+    fadeOutSlider.setNumDecimalPlacesToDisplay (0);
+    fadeOutSlider.setTextValueSuffix (" ms");
     fadeOutSlider.onValueChange = [this]
     {
         const auto v = (float) fadeOutSlider.getValue();
@@ -192,7 +241,7 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
         updateCurrentSlice ([enabled] (Slice& s) { s.enabled = enabled; }, false);
     };
 
-    setSize (720, 640);
+    setSize (780, 430);
     startTimerHz (5);
     // Reflects whatever the processor already has (e.g. restored via setStateInformation before
     // this editor was ever created) rather than assuming a blank slate.
@@ -204,6 +253,7 @@ KerfAudioProcessorEditor::KerfAudioProcessorEditor (KerfAudioProcessor& p)
 KerfAudioProcessorEditor::~KerfAudioProcessorEditor()
 {
     stopTimer();
+    setLookAndFeel (nullptr);
 }
 
 void KerfAudioProcessorEditor::selectSlice (int index)
@@ -247,7 +297,7 @@ void KerfAudioProcessorEditor::updateCurrentSlice (const std::function<void (Sli
 
 void KerfAudioProcessorEditor::refreshSliceDisplay()
 {
-    sampleNameLabel.setText ("Sample: " + (processor.getLoadedSampleName().isEmpty() ? "(none)" : processor.getLoadedSampleName())
+    sampleNameLabel.setText ((processor.getLoadedSampleName().isEmpty() ? "(no sample)" : processor.getLoadedSampleName())
                                   + juce::String::formatted ("  (%.2fs)", processor.getSampleDurationSeconds()),
                              juce::dontSendNotification);
 
@@ -268,70 +318,130 @@ void KerfAudioProcessorEditor::timerCallback()
 
     const auto playing = processor.getVoiceEngine().isSliceActive (processor.getSelectedSliceForEditing());
     playButton.setColour (juce::TextButton::buttonColourId,
-                          playing ? juce::Colours::limegreen
-                                   : juce::LookAndFeel_V4::getDefaultLookAndFeel().findColour (juce::TextButton::buttonColourId));
+                          playing ? KerfColours::accent : KerfColours::control);
+}
+
+void KerfAudioProcessorEditor::paint (juce::Graphics& g)
+{
+    g.fillAll (KerfColours::window);
+
+    g.setColour (KerfColours::panel);
+    g.fillRect (headerArea);
+
+    g.setColour (KerfColours::panel);
+    g.fillRoundedRectangle (sliceToolsArea.toFloat(), 3.0f);
+
+    auto drawPanel = [&g] (juce::Rectangle<int> r, const juce::String& title)
+    {
+        g.setColour (KerfColours::panel);
+        g.fillRoundedRectangle (r.toFloat(), 3.0f);
+        g.setColour (KerfColours::textDim);
+        g.setFont (juce::Font (juce::FontOptions (11.0f, juce::Font::bold)));
+        g.drawText (title.toUpperCase(), r.withHeight (18).withTrimmedLeft (8), juce::Justification::centredLeft);
+    };
+
+    drawPanel (slicePanel, "Slice");
+    drawPanel (soundPanel, "Sound");
+    drawPanel (globalPanel, "Global");
 }
 
 void KerfAudioProcessorEditor::resized()
 {
-    auto area = getLocalBounds().reduced (10);
-    auto row = [&area] (int height) { return area.removeFromTop (height).reduced (0, 2); };
+    auto area = getLocalBounds();
 
-    auto titleRow = row (24);
-    importButton.setBounds (titleRow.removeFromLeft (200));
-    infoButton.setBounds (titleRow.removeFromRight (24));
-    sampleNameLabel.setBounds (row (20));
-
-    auto autoDetectRow = row (24);
-    sensitivitySlider.setBounds (autoDetectRow.removeFromLeft (250));
-    autoDetectButton.setBounds (autoDetectRow.removeFromLeft (120).translated (10, 0));
-
-    auto sliceButtonsRow = row (24);
-    addSliceButton.setBounds (sliceButtonsRow.removeFromLeft (150));
-    clearSlicesButton.setBounds (sliceButtonsRow.removeFromLeft (110).translated (10, 0));
-    sliceCountLabel.setBounds (row (20));
-
-    waveformDisplay.setBounds (row (140));
-
-    area.removeFromTop (6);
-
-    auto midiModeRow = row (24);
-    midiModeLabel.setBounds (midiModeRow.removeFromLeft (100));
-    midiModeBox.setBounds (midiModeRow.removeFromLeft (150));
-
-    auto noteOffsetRow = row (24);
-    noteOffsetLabel.setBounds (noteOffsetRow.removeFromLeft (100));
-    noteOffsetSlider.setBounds (noteOffsetRow.removeFromLeft (250));
-
-    auto masterVolumeRow = row (24);
-    masterVolumeLabel.setBounds (masterVolumeRow.removeFromLeft (100));
-    masterVolumeSlider.setBounds (masterVolumeRow.removeFromLeft (250));
-
-    area.removeFromTop (6);
-
-    auto sliceIndexRow = row (24);
-    sliceIndexLabel.setBounds (sliceIndexRow.removeFromLeft (100));
-    sliceIndexSlider.setBounds (sliceIndexRow.removeFromLeft (150));
-
-    auto playRow = row (28);
-    playButton.setBounds (playRow.removeFromLeft (100));
-    stopButton.setBounds (playRow.removeFromLeft (100).translated (10, 0));
-    deleteSliceButton.setBounds (playRow.removeFromLeft (120).translated (20, 0));
-    loopToggle.setBounds (playRow.removeFromLeft (70).translated (20, 0));
-    enabledToggle.setBounds (playRow.removeFromLeft (90).translated (10, 0));
-
-    auto sliceParamRow = [&] (juce::Label& label, juce::Slider& slider)
+    headerArea = area.removeFromTop (30);
     {
-        auto r = row (24);
-        label.setBounds (r.removeFromLeft (100));
-        slider.setBounds (r.removeFromLeft (300));
+        auto r = headerArea.reduced (6, 4);
+        importButton.setBounds (r.removeFromLeft (130));
+        infoButton.setBounds (r.removeFromRight (22));
+        r.removeFromLeft (10);
+        sampleNameLabel.setBounds (r);
+    }
+
+    area = area.reduced (8, 0);
+    area.removeFromTop (8);
+    waveformDisplay.setBounds (area.removeFromTop (160));
+    area.removeFromTop (6);
+
+    sliceToolsArea = area.removeFromTop (64);
+    {
+        auto r = sliceToolsArea.reduced (6, 5);
+
+        auto top = r.removeFromTop (24);
+        sensitivityLabel.setBounds (top.removeFromLeft (70));
+        top.removeFromLeft (4);
+        sensitivitySlider.setBounds (top.removeFromLeft (150));
+        top.removeFromLeft (6);
+        autoDetectButton.setBounds (top.removeFromLeft (90));
+        top.removeFromLeft (14);
+        addSliceButton.setBounds (top.removeFromLeft (80));
+        top.removeFromLeft (4);
+        clearSlicesButton.setBounds (top.removeFromLeft (80));
+        sliceCountLabel.setBounds (top);
+
+        r.removeFromTop (6);
+        auto bottom = r.removeFromTop (24);
+        sliceIndexLabel.setBounds (bottom.removeFromLeft (70));
+        bottom.removeFromLeft (4);
+        sliceIndexSlider.setBounds (bottom.removeFromLeft (150));
+        bottom.removeFromLeft (6);
+        playButton.setBounds (bottom.removeFromLeft (60));
+        bottom.removeFromLeft (4);
+        stopButton.setBounds (bottom.removeFromLeft (60));
+        bottom.removeFromLeft (4);
+        deleteSliceButton.setBounds (bottom.removeFromLeft (80));
+        bottom.removeFromLeft (14);
+        loopToggle.setBounds (bottom.removeFromLeft (60));
+        bottom.removeFromLeft (4);
+        enabledToggle.setBounds (bottom.removeFromLeft (70));
+    }
+
+    area.removeFromTop (6);
+    auto panels = area.removeFromTop (juce::jmin (area.getHeight(), 138));
+
+    slicePanel = panels.removeFromLeft (190);
+    panels.removeFromLeft (6);
+    globalPanel = panels.removeFromRight (230);
+    panels.removeFromRight (6);
+    soundPanel = panels;
+
+    {
+        auto r = slicePanel.reduced (8, 0).withTrimmedTop (28);
+        auto barRow = [&r] (juce::Label& label, juce::Slider& slider)
+        {
+            auto line = r.removeFromTop (24);
+            label.setBounds (line.removeFromLeft (40));
+            line.removeFromLeft (4);
+            slider.setBounds (line);
+            r.removeFromTop (8);
+        };
+        barRow (startLabel, startSlider);
+        barRow (endLabel, endSlider);
+    }
+
+    auto knobCell = [] (juce::Rectangle<int> cell, juce::Label& label, juce::Slider& slider)
+    {
+        label.setBounds (cell.removeFromTop (16));
+        slider.setBounds (cell);
     };
 
-    sliceParamRow (startLabel, startSlider);
-    sliceParamRow (endLabel, endSlider);
-    sliceParamRow (pitchLabel, pitchSlider);
-    sliceParamRow (volumeLabel, volumeSlider);
-    sliceParamRow (panLabel, panSlider);
-    sliceParamRow (fadeInLabel, fadeInSlider);
-    sliceParamRow (fadeOutLabel, fadeOutSlider);
+    {
+        auto r = soundPanel.withTrimmedTop (20).reduced (4, 2);
+        const auto w = r.getWidth() / 5;
+        knobCell (r.removeFromLeft (w), pitchLabel, pitchSlider);
+        knobCell (r.removeFromLeft (w), volumeLabel, volumeSlider);
+        knobCell (r.removeFromLeft (w), panLabel, panSlider);
+        knobCell (r.removeFromLeft (w), fadeInLabel, fadeInSlider);
+        knobCell (r, fadeOutLabel, fadeOutSlider);
+    }
+
+    {
+        auto r = globalPanel.withTrimmedTop (20).reduced (4, 2);
+        auto left = r.removeFromLeft (r.getWidth() / 3 + 14);
+        midiModeLabel.setBounds (left.removeFromTop (16).reduced (4, 0));
+        midiModeBox.setBounds (left.removeFromTop (24).reduced (4, 0));
+        const auto w = r.getWidth() / 2;
+        knobCell (r.removeFromLeft (w), noteOffsetLabel, noteOffsetSlider);
+        knobCell (r, masterVolumeLabel, masterVolumeSlider);
+    }
 }

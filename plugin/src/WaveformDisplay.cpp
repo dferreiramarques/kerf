@@ -1,5 +1,6 @@
 #include "WaveformDisplay.h"
 #include <cmath>
+#include "KerfLookAndFeel.h"
 
 void WaveformDisplay::sampleChanged()
 {
@@ -130,7 +131,7 @@ int WaveformDisplay::findNearestBoundary (float x, bool& isStartEdge) const
 
 void WaveformDisplay::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colour (0xff14161a));
+    g.fillAll (KerfColours::waveBg);
 
     rebuildPeaksIfNeeded();
 
@@ -143,14 +144,14 @@ void WaveformDisplay::paint (juce::Graphics& g)
             // Slices exist but there's no audio behind them - the embedded sample failed to
             // restore (or was never saved, e.g. an older project file). The slice positions
             // themselves are still intact and will keep working once a sample is loaded again.
-            g.setColour (juce::Colours::orange);
+            g.setColour (juce::Colour (0xffc7691a));
             g.drawText (juce::String::formatted ("Sample missing - please reimport the audio file (%d slice%s saved)",
                                                  sliceCount, sliceCount == 1 ? "" : "s"),
                         getLocalBounds().reduced (10), juce::Justification::centred, true);
         }
         else
         {
-            g.setColour (juce::Colours::grey);
+            g.setColour (KerfColours::textDim);
             g.drawText ("No sample loaded", getLocalBounds(), juce::Justification::centred);
         }
 
@@ -171,15 +172,19 @@ void WaveformDisplay::paint (juce::Graphics& g)
 
         const auto isSelected = (int) i == selectedIndex;
 
-        g.setColour (isSelected ? juce::Colour (0x552f8fff) : juce::Colour (0x30ffffff));
+        g.setColour (isSelected ? KerfColours::marker.withAlpha (0.16f) : juce::Colour (0x00000000));
         g.fillRect (juce::Rectangle<float> (x0, 0.0f, juce::jmax (1.0f, x1 - x0), (float) getHeight()));
 
-        g.setColour (isSelected ? juce::Colours::deepskyblue : juce::Colours::grey);
+        g.setColour (isSelected ? KerfColours::marker : KerfColours::marker.withAlpha (0.7f));
         g.drawVerticalLine ((int) x0, 0.0f, (float) getHeight());
         g.drawVerticalLine ((int) x1, 0.0f, (float) getHeight());
+
+        juce::Path tri; // Simpler-style start marker
+        tri.addTriangle (x0 - 5.0f, 0.0f, x0 + 5.0f, 0.0f, x0, 7.0f);
+        g.fillPath (tri);
     }
 
-    g.setColour (juce::Colour (0xff7fd0ff));
+    g.setColour (KerfColours::wave);
     const auto midY = getHeight() * 0.5f;
 
     for (int x = 0; x < (int) peaks.size(); ++x)
