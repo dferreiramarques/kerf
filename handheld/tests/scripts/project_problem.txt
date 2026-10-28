@@ -1,0 +1,37 @@
+# Projects when the disk will not take the file: a folder sits where the part file of the project goes
+# (the test makes it before the run), so the first save fails. The header says NO SAVE and the person
+# is told once; the work stays in the program, nothing is made, and the folder is not touched.
+# Run from the repository root, with a folder that has rec-001.wav.kerf.tmp (a folder) in it:
+#   kerf_headless --script handheld/tests/scripts/project_problem.txt --fake-input --projects --start-dir <that folder>
+# The clock is fixed at 60 frames to the second.
+
+frames 30
+expect screen record
+press A
+wait 2
+press A
+frames 2
+press A
+wait load
+expect screen editor
+expect sample rec-001.wav
+expect project none
+expect file rec-001.wav.kerf.tmp yes
+
+# The first change: 1.5 s later the save is tried, fails, and the person is told.
+detect 1.0
+frames 2
+expect slices 10
+expect project edited
+wait 2
+expect project problem
+expect toast Cannot save the project
+expect file rec-001.wav.kerf no
+expect file rec-001.wav.kerf.tmp yes
+print project
+
+# It stays so, and quietly: the program is still working on the sample.
+wait 8
+expect project problem
+expect slices 10
+expect file rec-001.wav.kerf no

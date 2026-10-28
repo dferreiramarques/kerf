@@ -1,0 +1,334 @@
+KERF PARA O RG35XX H (PortMaster) - versão 0.5.0
+================================================
+
+NOTA: o slicer (0.1.0), as duas páginas com o sequenciador (0.2.0), a leitura direta do teclado
+MIDI USB (0.2.1) e a GRAVAÇÃO de áudio por USB (0.3.0, com um microfone de lapela sem fios
+genérico na porta USB-C) já foram confirmados num RG35XX H com muOS 2606.0. Ainda por confirmar no
+aparelho: a Tascam Model 12 (ou outra placa de som USB), a página inicial nova da 0.3.1 (abrir no
+REC) e os projetos: na 0.4.0 o guardar automático não repôs as slices no aparelho (a causa não foi
+encontrada) e a 0.5.0, que passa a guardar e a carregar projetos À MÃO (Start > Save project / Load
+project), só foi experimentada no PC. Tudo isto só foi testado no PC e em emuladores (a parte do
+USB também contra um "kernel de faz de conta": um programa que imita o comportamento do USB do
+Linux). Na 0.5.0 os testes automáticos NÃO foram atualizados: foi só compilada e experimentada à
+mão numa sessão no PC. O programa para o aparelho (kerf.aarch64) só correu nessa mesma sessão,
+num emulador (qemu), e escreveu o mesmo ficheiro de projeto que a versão para Linux. Se algo não
+funcionar, o kerf/kerf-log.txt diz o que se passou.
+
+O que é
+-------
+O Kerf é o teu slicer de samples e sequenciador de passos. Gravas um som novo por USB (ou
+carregas um loop), cortas em slices, tocas as slices no comando (ou num teclado MIDI USB) e pões
+as slices num padrão de 16 passos. O teu trabalho guarda-se num projeto, quando quiseres, com o
+Start > Save project (ver "Projetos").
+O stick esquerdo move o INÍCIO (start) da slice selecionada e o stick direito move o FIM (end).
+
+O Kerf tem CINCO PÁGINAS, em dois grupos, e o botão SELECT (um toque) percorre as páginas do grupo
+em que estás. O cabeçalho mostra o grupo, com a página onde estás acesa.
+  Para obter um sample ou um projeto (REC, LOAD, PROJ, REC, ...; o Kerf abre no REC):
+  - REC: gravar de um microfone ou de uma entrada de linha. É a página inicial.
+  - LOAD: a biblioteca de samples, onde escolhes um ficheiro de uma pasta.
+  - PROJ: a biblioteca de projetos, onde escolhes um projeto (ficheiro .kerf) que guardaste.
+  Para trabalhar com o sample:
+  - SLICER: detetar e cortar slices.
+  - SEQUENCER: uma linha por slice, 16 passos, 8 cenas, tempo, swing e tamanho do padrão.
+Do SLICER vais para o REC, o LOAD ou o PROJ com o Start > Record sample..., Load sample... ou Load
+project...; do REC, do LOAD e do PROJ voltas ao sample com o Start (o B também volta ao sample no
+REC; no LOAD e no PROJ o B sobe uma pasta de cada vez e, no topo, também volta ao sample). O
+sequenciador continua a tocar quando mudas de página (no SLICER e no SEQUENCER, o B liga e
+desliga). Para GUARDAR e CARREGAR projetos: Start > Save project, Save as new project e Load
+project... (no SLICER e no SEQUENCER).
+
+Instalar
+--------
+Precisas de uma firmware com PortMaster. O muOS já o traz instalado (é o caminho mais simples);
+no Knulli instalas o PortMaster em Start > Device Settings > Install PortMaster.
+
+1. Extrai este zip no PC: ficas com o ficheiro Kerf.sh e a pasta kerf.
+2. Com o aparelho desligado, tira o cartão, liga-o ao PC e copia os dois para o mesmo cartão
+   onde o PortMaster instala os outros ports (o do slot 2, se usares dois cartões; senão o do
+   slot 1). O sítio depende da firmware:
+   - muOS: a pasta kerf vai para a pasta "ports" (na raiz do cartão) e o ficheiro Kerf.sh vai
+     para ROMS/PORTS. São dois sítios diferentes.
+   - Knulli: o ficheiro Kerf.sh e a pasta kerf vão juntos para roms/ports.
+   - Outras firmwares com PortMaster: onde estão os outros ports.
+3. Volta a pôr o cartão no aparelho e liga. No muOS: Explore Content > Ports > Kerf. No Knulli
+   o Kerf aparece na lista de Ports (se não aparecer: Start > Game settings > Update gamelists).
+   Se não aparecer, reinicia o aparelho e confirma que as duas partes ficaram no mesmo cartão.
+4. Os teus sons: põe-nos em kerf/samples e, no Kerf, carrega em Select para passar da página REC
+   (gravar) para a página LOAD (a biblioteca de samples), onde navegas para qualquer pasta do
+   cartão. O Kerf lê WAV, MP3 e FLAC. Mais um Select leva à página PROJ (projetos guardados).
+
+Atualizar a partir da 0.1.0, 0.2.0, 0.2.1, 0.3.0, 0.3.1 ou 0.4.0
+-----------------------------------------------------------------
+Só muda o programa. Substitui o ficheiro ports/kerf/kerf.aarch64 pelo que vem neste zip (pela
+rede, com o SFTP, ou com o cartão ligado ao PC). Não mexas em kerf.cfg nem em samples: os teus
+ajustes e os teus sons ficam. O Kerf.sh e o resto da pasta kerf não mudaram de função. Os projetos
+(ficheiros .kerf) ficam ao lado do sample: leva o projeto com o sample se o mudares de sítio. Na
+0.5.0 o guardar automático da 0.4.0 vem DESLIGADO (Start > Settings > Autosave; no kerf.cfg a
+linha "projects" foi substituída por "autosave"): passas a guardar tu, com o Start > Save project.
+
+Teclado MIDI USB
+----------------
+O kernel do muOS 2606.0 não traz o driver de áudio/MIDI USB: o aparelho vê o teclado no
+barramento USB, mas nenhum programa o consegue ler (por isso aparecia "MIDI -"). A partir da
+0.2.1 o Kerf lê o teclado ele próprio, diretamente por USB. Não instala nada e não mexe no muOS.
+Funciona com teclados MIDI "class-compliant" (quase todos os que não pedem driver no PC) e só
+é usado quando o sistema não tem driver.
+- Liga o teclado (com o adaptador) à porta USB-C dos periféricos, antes ou depois de abrires
+  o Kerf; pode ser ligado e desligado a qualquer altura.
+- Se estiver a funcionar, o canto do ecrã mostra "MIDI 1" e o ponto pisca a cada nota. Em
+  Start > Input test, o bloco MIDI diz quantas entradas há e qual foi a última mensagem
+  (por exemplo "90 3C 64  note on C4 vel 100  ch 1").
+- Se mostrar "MIDI -": abre o kerf/kerf-log.txt. As linhas que começam por "midi:" dizem o que o
+  Kerf viu no USB e porque não conseguiu abrir o teclado. Guarda esse ficheiro e envia-mo.
+- Em kerf.cfg, "usb_midi = 0" desliga esta leitura direta.
+(O áudio de ENTRADA por USB - gravar de um microfone ou de uma placa de som - tem a sua secção
+própria, a seguir.)
+
+Gravar um sample (microfone, receptor sem fios, mesa de mistura)
+----------------------------------------------------------------
+A partir da 0.3.0 o Kerf grava som de uma entrada USB (já confirmado no aparelho, com um
+microfone de lapela sem fios), guarda a gravação como ficheiro WAV na pasta samples e carrega-a
+logo no slicer. Desde a 0.3.1 é a primeira coisa que o Kerf mostra ao abrir. O kernel do muOS
+2606.0 também não traz o driver de áudio USB, por isso o Kerf fala "USB Audio" ele próprio,
+diretamente por USB - tal como faz com o teclado MIDI. Não instala nada e não mexe no muOS. Não
+precisas de nada parecido com o ASIO4ALL (isso é só do Windows): o que faltava no aparelho era o
+driver do kernel, e o Kerf trata disso.
+
+Como gravar:
+1. Liga o microfone, o receptor sem fios ou a mesa de mistura à porta USB-C dos periféricos, com
+   o mesmo adaptador OTG ou hub que usaste para o teclado, antes ou depois de abrires o Kerf.
+   - Um receptor com ficha USB-C "macho" (por exemplo, o dos microfones de lapela sem fios) não
+     encaixa num adaptador OTG com entrada USB-A: precisa de um adaptador OTG com ficha USB-C
+     macho de um lado e entrada USB-C fêmea do outro, ou de um hub com portas USB-C, para o
+     aparelho o reconhecer e o alimentar.
+   - A Tascam Model 12 (ainda por confirmar no aparelho) tem de estar a funcionar como interface
+     de áudio USB, com o cabo USB-C ligado ao aparelho (e não no modo STORAGE do menu, que a
+     mostra ao computador como um cartão SD). O manual da Tascam recomenda ligá-la diretamente,
+     sem hub: no aparelho, usa o adaptador OTG e não um hub. Devias ver os 12 canais no Kerf;
+     escolhes o par (ou o canal) que queres gravar.
+2. O Kerf abre na página REC (RECORD SAMPLE). Em cima diz onde as gravações são guardadas ("Takes
+   are saved in ..."). A entrada abre-se logo, por isso os medidores já se mexem. Mais tarde, a
+   partir do slicer, o Start > Record sample... traz-te outra vez para aqui; a partir da
+   biblioteca de projetos (PROJ) é o Select.
+3. As três linhas do ecrã (cruz direcional: cima/baixo escolhe a linha, esquerda/direita altera):
+     Input     de onde vem o som (L1 / R1 também trocam de entrada)
+     Channels  que canais gravar: um par (1+2, 3+4, ...), um canal sozinho ou a mistura de dois
+     Gain      ganho de -12 a +30 dB
+   Cada canal tem o seu medidor, com o pico mais alto marcado. Fala ou toca e confirma que o
+   medidor se mexe; se aparecer "Too loud - lower the gain", baixa o ganho.
+4. A começa a gravação; A (ou B) pára. Depois:
+     A  guarda e carrega no slicer (já podes usar o Y para detetar slices)
+     X  guarda e fica no ecrã para uma gravação nova
+     B  deita fora a gravação
+   Os ficheiros chamam-se rec-001.wav, rec-002.wav ... e ficam em kerf/samples. O Kerf nunca
+   apaga nem substitui um ficheiro que já exista. A gravação pára sozinha ao fim de 3 minutos
+   (Start > Settings > Record limit: de 30 segundos a 5 minutos). Se desligares o microfone a
+   meio, o que já foi gravado fica guardado.
+5. O ecrã lembra-se da entrada, dos canais e do ganho da última vez.
+6. Select leva à biblioteca de samples (LOAD), mas não com uma gravação em curso ou por guardar: o ecrã avisa
+   ("Stop the take first" / "Save or discard the take first"), para nunca perderes uma gravação
+   por engano. O B (e o Start) voltam ao sample em que estavas a trabalhar; antes de haver um
+   sample não há para onde voltar, o B não faz nada e o Start abre um pequeno menu com Settings (o
+   limite da gravação está lá), Controls / help, Input test e Quit.
+
+Se aparecer "No audio input found": o Kerf não encontrou nenhuma entrada de áudio USB. Confirma o
+adaptador e o estado do aparelho (a Model 12 não pode estar no modo STORAGE) e espera um ou dois
+segundos - o Kerf volta a procurar sozinho. Se continuar assim, abre o kerf/kerf-log.txt: as
+linhas que começam por "audio:" dizem o que o Kerf viu em cada aparelho USB (os formatos que
+oferece e os descritores em bruto) e porque não o conseguiu usar. Guarda esse ficheiro e envia-mo:
+é com ele que se afina o Kerf para o teu microfone. Se aparecer "Nothing is coming from the
+input yet", o receptor está ligado mas não envia som (está sem emparelhar, sem bateria ou sem o
+microfone ligado?).
+Em kerf.cfg, "usb_audio = 0" desliga esta leitura direta de áudio USB.
+Não há monitorização: o som que entra não sai nas colunas durante a gravação.
+
+Comandos - página SLICER
+------------------------
+ Stick esquerdo        mover o INÍCIO da slice (cima/baixo: zoom)
+ Stick direito         mover o FIM da slice (cima/baixo: zoom)
+ L2 / R2 (premidos)    ajuste fino / grosso
+ Cruz direcional       cima/baixo escolhem a linha, esquerda/direita alteram o valor
+ A                     tocar a slice (premido)
+ X                     juntar uma slice
+ Y                     detetar slices automaticamente
+ L1 / R1               slice anterior / seguinte
+ B                     ligar / desligar o sequenciador
+ Select                página seguinte: o SEQUENCER
+ Select + X            apagar a slice
+ Select + B            desfazer
+ Start                 menu (Save project, Save as new project, Load project, Load sample,
+                       Record sample, Auto-detect, Add/Delete/Clear slices, Undo, Zoom, Go
+                       to sequencer, Settings, Controls / help, Input test, Quit)
+
+O zoom que estava no Select passou para o menu (Start > Zoom).
+
+Comandos - página REC (a página inicial; também em Start > Record sample...)
+----------------------------------------------------------------------------
+ Select (um toque)     ir para a biblioteca de samples (LOAD); não funciona com uma gravação
+                       em curso ou por guardar
+ Cruz direcional       cima/baixo: Input, Channels ou Gain; esquerda/direita: alterar
+ L1 / R1               entrada anterior / seguinte
+ A                     começar a gravar; parar
+ Y                     tentar abrir a entrada outra vez (depois de um erro)
+ B                     voltar ao sample em que estavas (antes de haver um, não faz nada)
+ Start                 o mesmo que o B; antes de haver um sample, abre o menu (Settings,
+                       Controls / help, Input test, Quit)
+ Depois de gravar:
+ A                     guardar e carregar no slicer
+ X                     guardar e gravar outra
+ B                     deitar fora
+
+Comandos - página LOAD (a biblioteca de samples; Select a partir do REC, ou Start > Load sample...)
+----------------------------------------------------------------------------------------------------
+ Cruz direcional       cima/baixo: escolher um ficheiro ou uma pasta
+ A                     abrir a pasta / carregar o ficheiro
+ B                     subir uma pasta (no topo, volta ao sample em que estavas)
+ L1 / R1               página acima / abaixo
+ Select (um toque)     ir para a página PROJ (projetos)
+ Start                 voltar ao sample; antes de haver um, abre o menu
+
+Comandos - página PROJ (a biblioteca de projetos; Select a partir do LOAD, ou Start > Load project...)
+------------------------------------------------------------------------------------------------------
+ Cruz direcional       cima/baixo: escolher um projeto (.kerf) ou uma pasta
+ A                     abrir a pasta / abrir o projeto (carrega o sample e repõe o trabalho)
+ B                     subir uma pasta (no topo, volta ao sample em que estavas)
+ L1 / R1               página acima / abaixo
+ Select (um toque)     ir para a página REC (gravar)
+ Start                 voltar ao sample; antes de haver um, abre o menu
+ A lista começa na pasta do sample em que estás (é onde os projetos se guardam).
+
+Comandos - página SEQUENCER
+---------------------------
+ Cruz direcional       mover o cursor (linha = slice, coluna = passo)
+ A                     ligar / desligar o passo (com o A premido, mexe a cruz para pintar)
+ X                     apagar o passo (com o X premido, mexe a cruz para apagar vários)
+ Y (premido)           ouvir a slice da linha
+ B                     ligar / desligar o sequenciador
+ L1 / R1               cena anterior / seguinte (começa quando o padrão voltar ao início)
+ Stick esquerdo        cima/baixo: tempo (40 a 300 BPM)
+ Stick direito         cima/baixo: swing (50% a 75%)
+ L2 / R2 (premidos)    tempo e swing mais finos / mais rápidos
+ Select + Esq./Dir.    tamanho do padrão (1 a 16 passos)
+ Select + X            limpar a linha
+ Select + B            desfazer
+ Select                página seguinte: o SLICER
+ Start                 menu (Play / stop, Tempo, Swing, Length, Scene, Copy scene to next, Clear
+                       row, Clear scene, Undo, Save project, Save as new project, Load
+                       project, Go to slicer, Settings, Controls / help, Quit)
+
+Como funciona o sequenciador
+----------------------------
+- A linha N toca a slice N. Se juntares, apagares ou detetares slices, os padrões acompanham as
+  slices; uma slice nova começa vazia. Desfazer (Select + B) também repõe os padrões.
+- Cada passo é uma semicolcheia. Uma slice normal (shot) recomeça em cada passo ligado. Uma
+  slice em modo loop fica ligada enquanto os passos seguidos estiverem ligados e solta-se no
+  primeiro passo desligado. Slices desativadas (OFF) ficam em silêncio.
+- Há 8 cenas, cada uma com o seu padrão. Mudar de cena a tocar só acontece quando o padrão
+  chega ao fim, para cair sempre no tempo. Em Start > Copy scene to next copias a cena para a
+  seguinte e continuas a editar a cópia.
+- Carregar outro sample pára o sequenciador e apaga os padrões; o tempo, o swing e o tamanho
+  ficam, a não ser que abras um projeto, que traz os seus próprios. Os padrões fazem parte do
+  projeto: são guardados com as slices e voltam com elas.
+
+Projetos (guardas e carregas tu)
+--------------------------------
+Um projeto é um ficheiro que guardas e carregas quando quiseres. No SLICER ou no SEQUENCER abre o
+menu (Start) e escolhe "Save project": o Kerf escreve um pequeno ficheiro de texto ao lado do
+sample, por exemplo demo_beat.kerf para o demo_beat.wav. Leva as slices com todos os parâmetros
+(início, fim, altura, volume, pan, one-shot ou loop, fade in e fade out, ligada ou desligada), os
+padrões das oito cenas, o tempo, o swing, o tamanho do padrão, a cena em que estavas e a slice
+selecionada. Não leva o histórico do "desfazer", o zoom nem os ajustes, e não leva o áudio: o
+projeto diz qual é o sample e o Kerf encontra-o ao lado do projeto.
+
+- Guardar: "Save project" guarda no projeto em que estás (o que abriste ou guardaste antes). Se
+  ainda não há nenhum, faz um ficheiro novo ao lado do sample: demo_beat.kerf, ou demo_beat 2.kerf,
+  demo_beat 3.kerf ... se esse nome já existir: guardar um projeto NOVO nunca substitui outro.
+  "Save as new project" faz o mesmo, mesmo que já tenhas um projeto aberto. O ecrã diz "Saved
+  demo_beat.kerf (12 slices)" ou "Could not save: <motivo>" (o motivo também fica no
+  kerf-log.txt), e o menu do Start mostra em baixo o nome do projeto em que estás.
+- Carregar: na página PROJ (Select duas vezes a partir do REC; ou Start > Load project...) vês as
+  pastas e os ficheiros .kerf; o A abre um. O Kerf procura o sample que o projeto indica (primeiro
+  ao lado do projeto, depois na pasta samples), carrega-o e repõe o projeto: "Opened
+  demo_beat.kerf: 12 slices". Se o sample não está lá, o ecrã diz "Sample not found: <nome>"; um
+  projeto feito para áudio de outro comprimento ou de outra taxa de amostragem não é aplicado
+  ("Project does not fit <nome>") e o sample abre como está.
+- O cabeçalho diz como estão as coisas, no canto por cima do medidor de saída: SAVED (o ficheiro
+  tem o trabalho como está), EDITED (o projeto em que estás foi alterado depois de guardado ou
+  aberto), UNSAVED (trabalhaste num sample que ainda não tem projeto) e NO SAVE (o último guardar
+  falhou). Em Start, o "Save project" mostra a mesma palavra.
+- O trabalho por guardar não se perde por engano. Carregar outro sample ou projeto, "guardar e
+  carregar" uma gravação, largar um ficheiro na janela (no PC) e "Quit" no menu deitam fora o
+  trabalho em que estás. Se ele não está guardado, à primeira o Kerf só diz "Unsaved changes -
+  repeat to discard" e não faz nada; repetires o mesmo nos 8 segundos seguintes avança. (Select +
+  Start durante 1 segundo, para sair, não pergunta.)
+- Guardar não estraga um ficheiro bom: o projeto é escrito primeiro para o demo_beat.kerf.tmp,
+  gravado no cartão e só depois substitui o antigo; um corte de corrente ou um cartão cheio deixam
+  o projeto anterior como estava. Cada guardar mantém o ficheiro que substitui como
+  demo_beat.kerf.bak.
+- A que sample pertence um projeto decide-se pelo número de frames e pela taxa de amostragem do
+  áudio, não pelo nome (o nome que vem no ficheiro serve para encontrar o sample, para as pessoas
+  e para o registo).
+- Guardar automático (opcional, DESLIGADO por omissão): Start > Settings > Autosave, ou
+  "autosave = 1" no kerf.cfg. É o modo de trabalhar da 0.4.0, que se mantém para quem o quiser: o
+  Kerf também guarda o trabalho de cada sample sozinho em rec-001.wav.kerf (o nome inteiro do
+  ficheiro mais ".kerf") ao lado do sample, um momento depois de parares (1,5 segundos; de 10 em
+  10 segundos, no máximo, enquanto trabalhas) e repõe-no quando carregas esse sample outra vez
+  ("Project restored: 12 slices"); a biblioteca (LOAD) marca esses samples com uma etiqueta KERF.
+  Esses ficheiros também são projetos e aparecem na página PROJ. Na 0.4.0 estava ligado; na 0.5.0
+  está desligado porque guardar à mão é mais claro: o trabalho fica onde o puseres.
+
+O ficheiro é texto simples, uma linha por facto, com umas linhas de comentário no início: podes
+abri-lo (e arranjá-lo) em qualquer editor. Se levares o sample para outro sítio, leva o projeto
+com ele. É o formato do próprio Kerf: os ficheiros de projeto da app web (.zip) são outra coisa.
+Ainda por confirmar no aparelho: guardar e carregar projetos no cartão.
+
+Se o A e o B (ou o X e o Y) estiverem trocados, corrige em Start > Settings > Swap A/B e
+Swap X/Y (também antes de carregares um sample: no REC, no LOAD ou no PROJ, sem sample, o Start
+abre o menu). Em Start > Input test vês o que o programa recebe de cada botão e de cada stick. Os
+ajustes ficam em kerf/kerf.cfg. Para sair: Select + Start durante 1 segundo.
+
+Se não arrancar
+---------------
+Os ficheiros kerf/log.txt (o que o lançador escreveu) e kerf/kerf-log.txt (o que o Kerf
+escreveu) dizem o que se passou: guarda-os.
+
+Roteiro (agora, a seguir, mais tarde)
+-------------------------------------
+O que se está a experimentar neste momento, o que vem depois e o que está mais longe ou ainda não
+está decidido. Dentro de cada parte, a ordem é, mais ou menos, a do trabalho. Nada disto é uma
+promessa.
+
+AGORA
+- Experimentar o Kerf no próprio aparelho (a consola portátil): guardar e carregar projetos (0.5.0)
+  no cartão SD e perceber porque é que o guardar automático da 0.4.0 não repôs nada ali; as páginas
+  iniciais (REC, LOAD, PROJ); uma placa de som (a Tascam Model 12, com 12 canais) e outros
+  microfones e recetores; a página do sequenciador; a sensação dos sticks no tempo e no swing; a
+  latência do áudio. O que aparecer corrige-se primeiro.
+
+A SEGUIR
+- Intensidade (velocity) de cada passo no sequenciador: o L2 e o R2 baixam e sobem a intensidade do
+  passo onde está o cursor. (Hoje o L2 e o R2 são o ajuste fino / grosso dos sticks do tempo e do
+  swing nessa página, por isso esse ajuste passa para outro sítio.)
+- Flam: o Y num passo que já está ligado liga e desliga um flam (um toque curto de ornamento, mesmo
+  antes do passo). (Hoje o Y, premido, toca a slice da linha; num passo desligado continuaria a
+  fazer isso. Qualquer outro botão serve: o Y é só o menos usado por agora.) A intensidade e o flam
+  obrigam cada passo a guardar mais do que ligado / desligado, por isso os padrões e o ficheiro de
+  projeto mudam (formato versão 2, que continua a ler a versão 1).
+- MIDI: arrancar e parar o sequenciador com um CC de MIDI (uma mensagem de control change, por
+  exemplo a de um botão de um teclado ou de um controlador). Que CC e que valores: por decidir.
+- Sincronização por clock MIDI: o sequenciador segue o tempo e o arranque e a paragem de um clock
+  MIDI externo.
+- Comparar o sequenciador com o da app web (cenas, opções por passo) e pô-los de acordo; o
+  kerf.html da app web não estava à mão quando isto foi escrito.
+- Pôr os testes em dia com a 0.5.0 (as suites antigas falham em alguns sítios e o código novo não
+  tem nenhum) e escrever os testes das novidades acima.
+
+MAIS TARDE
+- Poder renderizar o áudio: escrever o som de uma sequência num ficheiro WAV (um bounce) e de um
+  conjunto de sequências, por exemplo as oito cenas uma a seguir à outra ou uma cadeia de cenas
+  por uma ordem à tua escolha.
+- A cadeia de efeitos (compressor, decimator, overdrive, reverb).
+- Talvez: a compatibilidade com os projetos da app web (abri-los e, quem sabe, escrevê-los). Não
+  está decidido que seja preciso: o Kerf já tem projetos próprios.
+- Trabalho de desempenho no núcleo ARM e, depois, um hardware próprio.

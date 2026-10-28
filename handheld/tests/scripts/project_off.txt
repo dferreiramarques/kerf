@@ -1,0 +1,29 @@
+# Projects switched off (what the headless runner does unless --projects is given): the work is
+# not saved, the header says so, and a project file that is there is neither read nor touched.
+# Run from the repository root, with an empty folder and the pretend microphone:
+#   kerf_headless --script handheld/tests/scripts/project_off.txt --fake-input --start-dir <empty folder>
+
+frames 30
+expect screen record
+press A
+wait 2
+press A
+frames 2
+press A
+wait load
+expect screen editor
+expect sample rec-001.wav
+expect project off
+
+detect 1.0
+frames 2
+expect slices 10
+wait 5
+expect project off
+expect file rec-001.wav.kerf no
+
+# Loading it again: nothing comes back, because nothing was kept.
+reload
+expect slices 0
+expect project off
+expect file rec-001.wav.kerf no

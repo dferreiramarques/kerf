@@ -1,0 +1,84 @@
+# Projects, first run: a take becomes a sample, and what is done to it is saved next to it a moment
+# after it stops changing (rec-001.wav.kerf). The second run, project_restore.txt, starts Kerf afresh
+# in the same folder and checks that all of it comes back.
+# Run from the repository root, with an empty folder, the pretend microphone and the projects on:
+#   kerf_headless --script handheld/tests/scripts/project_save.txt --fake-input --projects --start-dir <empty folder>
+# The clock is fixed at 60 frames to the second, so the numbers below are exact.
+
+# ------------------------------------------------------------------ a take becomes a sample: no project yet
+frames 30
+expect screen record
+expect project none
+press A
+wait 2
+press A
+frames 2
+press A
+wait load
+expect screen editor
+expect sample rec-001.wav
+expect slices 0
+expect project none
+expect file rec-001.wav.kerf no
+
+# A sample that is only looked at gets no project, however long.
+wait 5
+expect project none
+expect file rec-001.wav.kerf no
+
+# ------------------------------------------------------------------ the first change: the project follows 1.5 s later
+detect 1.0
+frames 2
+expect slices 10
+expect project edited
+wait 1
+expect project edited
+expect file rec-001.wav.kerf no
+wait 1
+expect project saved
+expect file rec-001.wav.kerf yes
+expect file rec-001.wav.kerf.bak no
+
+# ------------------------------------------------------------------ more work on the slicer: slice 3 gets a later end
+press R1
+press R1
+expect selected 2
+expect end 3 0.6049 0.002
+stick r 0.8 0 25
+expect end 3 0.8567 0.002
+
+# ------------------------------------------------------------------ and on the sequencer: steps, tempo, swing, length, scene
+press Select
+frames 2
+expect screen sequencer
+expect cursor 3 1
+press A
+press Right
+press Right
+press Right
+press A
+expect cells 2
+stick l 0 -1 60
+expect tempo 160 1.5
+stick r 0 -1 30
+expect swing 56
+hold Select
+press Left
+press Left
+release Select
+frames 2
+expect length 14
+press R1
+expect scene 2
+press Down
+press Down
+press A
+expect cursor 5 4
+expect selected 4
+expect cells 1
+
+# ------------------------------------------------------------------ all of it is saved once things settle
+wait 3
+expect project saved
+expect file rec-001.wav.kerf yes
+expect file rec-001.wav.kerf.bak no

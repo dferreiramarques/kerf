@@ -1,0 +1,8 @@
+# Packages built by tools/build-release.sh
+dist/
+
+# Projects that Kerf saves next to a sample (0.4.0 and later), and the copies it makes of them
+*.kerf
+*.kerf.bak
+*.kerf.old*
+*.kerf.tmp

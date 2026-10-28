@@ -1,0 +1,50 @@
+# The left stick moves the START of the selected slice, the right stick moves its END.
+# Run from the repository root:  kerf_headless --script handheld/tests/scripts/stick_editing.txt
+# The clock is fixed at 60 frames per second, so the numbers below are exact.
+
+load handheld/samples/demo_beat.wav
+detect 0.5
+frames 2
+expect slices 16
+expect selected 0
+expect start 1 0.0001 0.001
+expect end 1 0.2001 0.001
+
+# START can never pass END: it stops 1 ms short of it.
+stick l 0.8 0 40
+expect start 1 0.1991 0.0005
+expect end 1 0.2001 0.0005
+
+# The right stick pushes END out to the right...
+frames 60
+stick r 0.8 0 25
+expect start 1 0.1991 0.0005
+expect end 1 0.8458 0.002
+
+# ...and L2 makes the same push ten times finer.
+frames 60
+hold L2
+stick r -0.8 0 25
+release L2
+expect end 1 0.7812 0.002
+
+# START stops at the very beginning of the sample.
+frames 60
+stick l -1 0 400
+expect start 1 0.0 0.0005
+
+# Every edit can be undone, newest first. The four edits above were each more than 0.8 s
+# apart, so each one is a step of its own.
+command undo
+frames 2
+expect start 1 0.1991 0.0005
+expect end 1 0.7812 0.002
+command undo
+frames 2
+expect end 1 0.8458 0.002
+command undo
+frames 2
+expect end 1 0.2001 0.001
+command undo
+frames 2
+expect start 1 0.0001 0.001

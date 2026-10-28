@@ -1,0 +1,24 @@
+# Holding Select and Start together for one second leaves the program: the way out on a handheld.
+# Run from the repository root:  kerf_headless --script handheld/tests/scripts/quit_combo.txt
+
+load handheld/samples/demo_beat.wav
+frames 2
+expect quit no
+
+# Start alone only opens the menu, however long it is held.
+hold Start
+frames 90
+expect screen menu
+expect quit no
+release Start
+frames 2
+
+# Both together: not yet after half a second...
+hold Select
+hold Start
+frames 30
+expect quit no
+
+# ...but after a second.
+frames 40
+expect quit yes

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>./Kerf.sh</path>
+    <name>Kerf</name>
+    <desc>Sample slicer and 16-step sequencer for handhelds. Record a sample from a USB microphone or load a loop, cut it into slices, play them from the pad or a MIDI keyboard and put them in a pattern. The left stick moves the start of the selected slice, the right stick moves its end. Select flips between record and the file library, and between the slicer and the sequencer. Your slices and patterns are saved by themselves next to the sample.</desc>
+    <developer>David Ferreira Marques</developer>
+    <genre>Music</genre>
+    <image>./kerf/screenshot.png</image>
+  </game>
+</gameList>

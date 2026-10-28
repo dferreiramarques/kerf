@@ -1,0 +1,5 @@
+# A check that is wrong on purpose (the test expects this run to FAIL, with the message below): no sample has
+# been opened, so the project is "none", not "saved". A runner whose check could never fail would let it pass.
+frames 5
+expect project none
+expect project saved

@@ -37,6 +37,14 @@ Download the native Windows build from [kerf.monco.io](https://kerf.monco.io) �
 
 A free VST3 instrument for Windows 10/11 (x64) with just the Slicer from the web app — no sequencer and no effects chain. Get the installer at [kerf.monco.io](https://kerf.monco.io); source and build notes are in [`plugin/`](plugin/README.md).
 
+### Handheld (Anbernic RG35XX H, test build)
+
+A native port of the slicer and the 16-step sequencer for the Anbernic RG35XX H (muOS, installed through
+PortMaster): the left stick sets where a slice starts and the right stick where it ends. It is an early
+test build. Screenshots and the install steps are on [kerf.monco.io](https://kerf.monco.io/#handheld); the
+source is in [`handheld/`](handheld/README.md), with the shared engine in [`core/`](core/) and a few small
+libraries in [`third_party/`](third_party/README.md). It is a separate C++ program built with CMake.
+
 ### Local Development
 
 ```bash
@@ -130,7 +138,11 @@ kerf/
 ├── scripts/             # Build helpers for the desktop app
 ├── src-tauri/           # Windows desktop app (Tauri)
 ├── plugin/              # Kerf Lite VST3 (JUCE, its own CMake project)
+├── core/                # Engine shared by the handheld port (slicer, sequencer, projects) and its tests
+├── handheld/            # Handheld port for the Anbernic RG35XX H (SDL2, CMake, PortMaster package)
+├── third_party/         # Small libraries used by core/ and handheld/ (dr_libs, font8x8), with licences
 ├── downloads/           # Windows installers: desktop app and Kerf Lite VST3
+├── images/              # Pictures for the landing page (index.html)
 └── README.md           # This file
 ```
 
@@ -180,6 +192,11 @@ git push origin main v0.1.2
 the raw .vst3 zip and the desktop app, publishes a GitHub release, and commits the files to `downloads/`
 with `index.html` pointing at them - which is what kerf.monco.io serves. If any step fails, nothing is
 published and the site keeps the previous version.
+
+The handheld port is not part of that workflow. Its PortMaster and Windows packages are built with
+`handheld/tools/build-release.sh` (see [`handheld/README.md`](handheld/README.md)). Every tag that starts
+with `v` runs the workflow above, which would fail for a handheld version, so give handheld releases a tag
+with another prefix, for example `handheld-0.5.0`.
 
 ## License
 

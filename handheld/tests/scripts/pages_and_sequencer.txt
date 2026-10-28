@@ -1,0 +1,270 @@
+# The two pages of Kerf (Select flips between them) and the sequencer on the second one.
+# Run from the repository root:  kerf_headless --script handheld/tests/scripts/pages_and_sequencer.txt
+# The clock is fixed at 60 frames per second, so the numbers below are exact.
+
+load handheld/samples/demo_beat.wav
+detect 0.5
+frames 2
+expect slices 16
+expect screen editor
+expect page slicer
+expect view all
+expect playing no
+
+# ------------------------------------------------------------------ Select flips the pages
+press Select
+frames 2
+expect screen sequencer
+expect page sequencer
+press Select
+frames 2
+expect screen editor
+expect page slicer
+# Select no longer zooms: the whole sample is still in view.
+expect view all
+
+# The zoom moved into the menu (8th entry, "Zoom").
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect screen editor
+expect view zoomed
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect view all
+
+# ------------------------------------------------------------------ the cursor follows the slice
+press R1
+press R1
+expect selected 2
+press Select
+frames 2
+expect screen sequencer
+expect cursor 3 1
+expect cells 0
+
+# A switches a step on, X switches it off.
+press A
+expect cell 3 1 on
+expect cells 1
+press Right
+press Right
+press Right
+expect cursor 3 4
+press A
+expect cell 3 4 on
+press X
+expect cell 3 4 off
+expect cells 1
+
+# Holding A paints what the first press did while the cursor moves: step 4 is off, so it paints "on".
+hold A
+press Right
+press Right
+release A
+expect cell 3 4 on
+expect cell 3 5 on
+expect cell 3 6 on
+expect cells 4
+
+# Moving to another row selects that slice on the slicer page too.
+press Down
+expect cursor 4 6
+expect selected 3
+press Up
+expect selected 2
+
+# The cursor stops at the edges.
+press Left
+press Left
+press Left
+press Left
+press Left
+press Left
+press Left
+expect cursor 3 1
+press Up
+press Up
+press Up
+press Up
+expect cursor 1 1
+
+# ------------------------------------------------------------------ Select chords on this page
+press Down
+press Down
+hold Select
+press X
+release Select
+frames 2
+expect screen sequencer
+expect cells 0
+hold Select
+press B
+release Select
+frames 2
+expect screen sequencer
+expect cells 4
+
+# Select + Left / Right sets how many steps the pattern has.
+expect length 16
+hold Select
+press Left
+press Left
+release Select
+frames 2
+expect length 14
+expect screen sequencer
+hold Select
+press Right
+press Right
+press Right
+release Select
+frames 2
+expect length 16
+
+# ------------------------------------------------------------------ scenes
+press R1
+expect scene 2
+expect cells 0
+press A
+expect cells 1
+press L1
+expect scene 1
+expect cells 4
+press L1
+expect scene 1
+
+# Start > "Copy scene to next" (6th entry) puts scene 1 on top of scene 2 and moves there.
+press Start
+expect screen menu
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect screen sequencer
+expect scene 2
+expect cells 4
+
+# "Clear scene" (8th entry) empties it, "Undo" (9th) brings it back.
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect cells 0
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect cells 4
+press L1
+expect scene 1
+
+# ------------------------------------------------------------------ tempo and swing are on the sticks
+expect tempo 120
+expect swing 50
+stick l 0 -1 60
+expect tempo 160 1.5
+stick l 0 1 30
+expect tempo 140 1.5
+hold L2
+stick l 0 -1 60
+release L2
+expect tempo 144 1.5
+stick r 0 -1 30
+expect swing 56
+stick r 0 1 120
+expect swing 50
+frames 2
+
+# ------------------------------------------------------------------ the transport (B) on both pages
+expect playing no
+press B
+expect playing yes
+frames 30
+press Select
+frames 2
+expect screen editor
+expect playing yes
+press B
+expect playing no
+press B
+expect playing yes
+press Select
+frames 2
+expect screen sequencer
+expect playing yes
+press B
+expect playing no
+print sequencer
+
+# ------------------------------------------------------------------ the menu on the sequencer page
+press Start
+expect screen menu
+press Start
+expect screen sequencer
+
+# Settings and help return to the page they were opened from.
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect screen settings
+press B
+expect screen menu
+press B
+expect screen sequencer
+command help
+frames 2
+expect screen help
+press B
+expect screen sequencer
+expect page sequencer
+
+# "Go to slicer" (10th entry) is the menu route to the other page.
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect screen editor
+expect page slicer

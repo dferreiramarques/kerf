@@ -1,0 +1,9 @@
+# Launchers and metadata that run on the handheld must keep Unix line endings,
+# even when the repository is checked out on Windows.
+*.sh             text eol=lf
+portmaster/*.json text eol=lf
+portmaster/*.xml  text eol=lf
+portmaster/*.md   text eol=lf
+portmaster/*.txt  text eol=lf
+*.wav binary
+*.png binary

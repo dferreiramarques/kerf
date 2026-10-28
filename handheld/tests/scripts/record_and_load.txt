@@ -1,0 +1,88 @@
+# Recording a sample with a pretend USB microphone: Kerf starts on the Record page, a take becomes the
+# sample in the slicer, and a second take, started from the slicer's menu, is only kept.
+# Run from the repository root, with a folder that is empty (the takes are saved there):
+#   kerf_headless --script handheld/tests/scripts/record_and_load.txt --fake-input --start-dir <empty folder>
+# The pretend microphone sends a tone on its two channels as the clock runs, so a take has an exact length.
+
+# ------------------------------------------------------------------ the page Kerf starts on
+frames 30
+expect screen record
+expect loaded no
+expect inputs 4
+expect input Pretend USB microphone
+expect channels 1+2
+expect gain 0
+expect phase idle
+expect take 0
+
+# ------------------------------------------------------------------ Select: the library is the page behind it
+press Select
+frames 4
+expect screen browser
+press Y
+frames 2
+expect screen browser
+press Select
+frames 30
+expect screen record
+expect input Pretend USB microphone
+expect phase idle
+
+# ------------------------------------------------------------------ A starts, A stops
+press A
+wait 2
+expect phase recording
+expect take 2.0 0.1
+press A
+frames 2
+expect phase stopped
+expect take 2.0 0.1
+
+# B throws the take away; the settings can be changed again.
+press B
+frames 2
+expect phase idle
+expect take 0
+expect screen record
+
+# A shorter take that is kept: A saves it and loads it into the slicer.
+press A
+wait 1.5
+press A
+frames 2
+expect take 1.5 0.1
+press A
+wait load
+expect screen editor
+expect loaded yes
+expect saved rec-001.wav
+expect sample rec-001.wav
+expect duration 1.5 0.1
+expect toast Saved rec-001.wav
+expect slices 0
+
+# ------------------------------------------------------------------ a second take, from the menu
+press Start
+press Down
+press A
+frames 30
+expect screen record
+expect phase idle
+expect take 0
+press A
+wait 1
+press A
+frames 2
+expect take 1.0 0.1
+
+# X saves it and stays for the next take; the first recording is still the sample that is loaded.
+press X
+frames 4
+expect saved rec-002.wav
+expect phase idle
+expect toast Saved rec-002.wav
+press B
+frames 2
+expect screen editor
+expect sample rec-001.wav
+expect duration 1.5 0.1

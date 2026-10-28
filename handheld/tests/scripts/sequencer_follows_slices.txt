@@ -1,0 +1,160 @@
+# The patterns belong to their slices: row N plays slice N, so adding, deleting, detecting and
+# undoing slices moves the rows along with them (and only those rows).
+# Run from the repository root:  kerf_headless --script handheld/tests/scripts/sequencer_follows_slices.txt
+
+load handheld/samples/demo_beat.wav
+detect 0.5
+frames 2
+expect slices 16
+
+# ------------------------------------------------------------ a small pattern on rows 12 and 14
+# (R1 walks to slice 12; the sequencer page puts its cursor on the selected slice.)
+press R1
+press R1
+press R1
+press R1
+press R1
+press R1
+press R1
+press R1
+press R1
+press R1
+press R1
+expect selected 11
+press Select
+frames 2
+expect screen sequencer
+expect cursor 12 1
+press A
+press Down
+press Down
+press Right
+press A
+expect cursor 14 2
+expect cell 12 1 on
+expect cell 14 2 on
+expect cells 2
+press Select
+frames 2
+expect screen editor
+
+# ------------------------------------------------------------ add: the rows below move down
+# X adds a slice at the centre of the view (2.65 s: it becomes slice 10).
+press X
+expect slices 17
+expect selected 9
+press Select
+frames 2
+expect cell 13 1 on
+expect cell 15 2 on
+expect cell 12 1 off
+expect cell 14 2 off
+expect cells 2
+
+# A step programmed on another row after the add (row 3, step 2)...
+press Up
+press Up
+press Up
+press Up
+press Up
+press Up
+press Up
+expect cursor 3 2
+press A
+expect cells 3
+press Select
+frames 2
+
+# ...survives undoing the add, which only takes the new slice (and its row) away.
+hold Select
+press B
+release Select
+frames 2
+expect slices 16
+press Select
+frames 2
+expect cell 12 1 on
+expect cell 14 2 on
+expect cell 3 2 on
+expect cell 13 1 off
+expect cells 3
+press Select
+frames 2
+
+# ------------------------------------------------------------ delete: the rows below move up
+# L1 walks back to slice 3 (the one with the step on row 3); Select + X deletes it with its step.
+press L1
+press L1
+press L1
+press L1
+press L1
+press L1
+press L1
+press L1
+press L1
+press L1
+press L1
+expect selected 2
+hold Select
+press X
+release Select
+frames 2
+expect slices 15
+press Select
+frames 2
+expect cell 11 1 on
+expect cell 13 2 on
+expect cell 12 1 off
+expect cell 3 2 off
+expect cells 2
+
+# Undo brings the slice back with its step, and the other rows move down again.
+press Select
+frames 2
+hold Select
+press B
+release Select
+frames 2
+expect slices 16
+press Select
+frames 2
+expect cell 12 1 on
+expect cell 14 2 on
+expect cell 3 2 on
+expect cells 3
+press Select
+frames 2
+
+# ------------------------------------------------------------ detect and clear replace every slice
+detect 0.5
+frames 2
+expect cells 0
+command undo
+frames 2
+expect slices 16
+expect cells 3
+expect cell 12 1 on
+
+# Start > "Clear all slices" (6th entry).
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+frames 2
+expect slices 0
+expect cells 0
+command undo
+frames 2
+expect slices 16
+expect cells 3
+expect cell 14 2 on
+
+# ------------------------------------------------------------ a new sample starts from nothing
+load handheld/samples/demo_beat.wav
+frames 2
+expect slices 0
+expect cells 0
+expect playing no

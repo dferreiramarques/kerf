@@ -1,0 +1,5 @@
+# A check that is wrong on purpose (the test expects this run to FAIL, with the message below): the file is not
+# next to the sample, so "yes" is wrong.
+load handheld/samples/demo_beat.wav
+expect file demo_beat.wav yes
+expect file nothing-like-this.kerf yes

@@ -1,0 +1,92 @@
+# Moving between the screens with the pad only.
+load handheld/samples/demo_beat.wav
+frames 2
+expect screen editor
+
+# Start opens the menu and closes it again.
+press Start
+expect screen menu
+press Start
+expect screen editor
+
+# Y opens the auto-detect dialog; B cancels it, A runs it.
+press Y
+expect screen detect
+press B
+expect screen editor
+expect slices 0
+press Y
+press A
+expect screen editor
+expect slices 16
+
+# Menu entries: Settings (10th), Controls / help (11th), Input test (12th).
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect screen settings
+press B
+expect screen menu
+press Down
+press A
+expect screen help
+press B
+expect screen editor
+
+press Start
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press Down
+press A
+expect screen inputTest
+press B
+expect screen menu
+press Start
+expect screen editor
+
+# Menu > Load sample opens the file browser; Start leaves it again while a sample is loaded.
+press Start
+press A
+expect screen browser
+press Start
+expect screen editor
+expect loaded yes
+
+# Menu > Record sample opens the Record page. Select flips it with the library; B and Start lead back.
+press Start
+press Down
+press A
+expect screen record
+press Select
+frames 2
+expect screen browser
+press Select
+frames 2
+expect screen record
+press B
+expect screen editor
+press Start
+press A
+expect screen browser
+press Select
+frames 2
+expect screen record
+press Start
+expect screen editor
+expect loaded yes

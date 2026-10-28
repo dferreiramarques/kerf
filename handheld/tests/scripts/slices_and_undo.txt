@@ -1,0 +1,47 @@
+# Adding, deleting, selecting and undoing slices.
+load handheld/samples/demo_beat.wav
+expect loaded yes
+expect slices 0
+expect canundo no
+
+detect 0.5
+frames 2
+expect slices 16
+expect selected 0
+expect canundo yes
+
+# L1 / R1 walk through the slices and stop at the ends.
+press L1
+expect selected 0
+press R1
+expect selected 1
+press R1
+expect selected 2
+press L1
+expect selected 1
+
+# X adds a slice at the centre of the view and selects it (2.65 s lies between slices 9 and 10).
+press X
+expect slices 17
+expect selected 9
+
+# Select + X deletes it, Select + B brings it back.
+hold Select
+press X
+release Select
+frames 2
+expect slices 16
+hold Select
+press B
+release Select
+frames 2
+expect slices 17
+
+# Undo all the way back to the plain sample.
+command undo
+frames 2
+expect slices 16
+command undo
+frames 2
+expect slices 0
+expect canundo no

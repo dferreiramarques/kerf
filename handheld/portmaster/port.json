@@ -1,0 +1,31 @@
+{
+  "version": 4,
+  "name": "kerf.zip",
+  "items": [
+    "Kerf.sh",
+    "kerf"
+  ],
+  "items_opt": [],
+  "attr": {
+    "title": "Kerf",
+    "porter": [
+      "David Ferreira Marques"
+    ],
+    "desc": "Sample slicer and 16-step sequencer: record a sample from a USB microphone or load a loop, cut it into slices, play them from the pad or a MIDI keyboard and put them in a pattern. The left stick moves the start of the selected slice, the right stick moves its end. Select flips between record and the file library, and between the slicer and the sequencer. Your slices and patterns are saved by themselves next to the sample.",
+    "inst": "muOS: copy the kerf folder to ports and Kerf.sh to ROMS/PORTS. Knulli and most others: copy both together to roms/ports. Put your samples (WAV, MP3, FLAC) in kerf/samples, or browse to any folder on the card. Kerf opens on the Record page: Select opens the file library, and (once a sample is loaded) flips between the slicer and the sequencer. Hold SELECT + START for one second to quit.",
+    "genres": [
+      "other"
+    ],
+    "image": null,
+    "rtr": true,
+    "exp": true,
+    "runtime": [],
+    "store": [],
+    "availability": "full",
+    "reqs": [],
+    "arch": [
+      "aarch64"
+    ],
+    "min_glibc": ""
+  }
+}

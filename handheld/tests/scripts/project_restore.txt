@@ -1,0 +1,58 @@
+# Projects, second run: Kerf starts afresh in the folder that project_save.txt worked in (a new
+# program, nothing remembered but what is on the disk), loads the same sample from the library and
+# finds its slices, steps, tempo, swing, length and scene as they were left.
+# Run from the repository root, after project_save.txt, in the same folder (the test does both):
+#   kerf_headless --script handheld/tests/scripts/project_restore.txt --fake-input --projects --start-dir <that folder>
+
+# ------------------------------------------------------------------ the library: rec-001.wav is the only sample, first after ".."
+frames 30
+expect screen record
+press Select
+frames 4
+expect screen browser
+press A
+wait load
+expect screen editor
+expect sample rec-001.wav
+expect toast Project restored: 10 slices
+
+# ------------------------------------------------------------------ the slicer: slices, and the one that was selected
+expect slices 10
+expect selected 4
+expect start 3 0.4027 0.002
+expect end 3 0.8567 0.002
+expect end 10 2.0208 0.002
+expect canundo no
+expect project saved
+
+# ------------------------------------------------------------------ the sequencer: the scene, the steps and the settings
+expect tempo 160 0.05
+expect swing 56
+expect length 14
+expect scene 2
+expect cells 1
+press Select
+frames 2
+expect screen sequencer
+expect cursor 5 1
+expect cell 5 4 on
+press L1
+expect scene 1
+expect cells 2
+expect cell 3 1 on
+expect cell 3 4 on
+expect cell 3 2 off
+
+# Looking around is not changing anything: no new file, no backup, still saved.
+wait 5
+expect project saved
+expect file rec-001.wav.kerf.bak no
+press Select
+frames 2
+
+# ------------------------------------------------------------------ a change in this run: the project as it was is kept as .bak
+press X
+wait 3
+expect project saved
+expect slices 11
+expect file rec-001.wav.kerf.bak yes

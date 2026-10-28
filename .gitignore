@@ -1,3 +1,6 @@
 node_modules/
 package-lock.json
 .claude/
+
+# Out-of-tree builds of the handheld port (cmake -S handheld -B build/handheld)
+/build/
