@@ -1975,7 +1975,23 @@
             }
             html.kerf-mobile #editor-tab .controls-bar { padding-bottom: 8px; }
             html.kerf-mobile .m-pads { grid-template-columns: repeat(8, 1fr); }
-            html.kerf-mobile .m-fabs { flex-direction: row-reverse; }
+            /* Botões flutuantes sobem para o topo, ao lado do ⋯, para não taparem o painel da direita */
+            html.kerf-mobile { --m-fab: 34px; }
+            html.kerf-mobile .m-fabs,
+            html.kerf-mobile.m-pads-open .m-fabs {
+                top: 3px;
+                bottom: auto;
+                right: calc(56px + env(safe-area-inset-right));
+                flex-direction: row;
+                gap: 8px;
+            }
+            html.kerf-mobile .m-fab { box-shadow: none; }
+            html.kerf-mobile .m-fab svg { width: 18px; height: 18px; }
+            html.kerf-mobile .m-fab-badge { top: -3px; right: -6px; min-width: 16px; height: 16px; line-height: 16px; font-size: 10px; padding: 0 4px; }
+            html.kerf-mobile header { padding-right: calc(8px + env(safe-area-inset-right)); }
+            html.kerf-mobile #editor-tab .sidebar-left,
+            html.kerf-mobile #editor-tab .effects-panel { padding-bottom: 12px !important; }
+            html.kerf-mobile #editor-tab .sidebar-right { padding-top: calc(48px + env(safe-area-inset-top)); padding-bottom: 16px; }
         }
 
         /* Modal — animações (secção 6 do design system) */
@@ -2091,6 +2107,7 @@
                 <button class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">🌙</button>
                 <button class="btn" id="saveBtn" data-tour="save">Save Project</button>
                 <button class="btn" id="loadBtn" data-tour="save">Load Project</button>
+                <button class="btn m-only" id="mFullscreenBtn" type="button">Full screen</button>
                 <input type="file" id="projectFile" accept=".zip" style="display: none;">
             </div>
             <!-- Mobile: os controlos do topo vivem num menu -->
@@ -6126,6 +6143,41 @@
             // iOS: tocar mesmo com o interruptor de silêncio ligado (Safari 17+)
             if (isKerfMobile() && navigator.audioSession) {
                 try { navigator.audioSession.type = 'playback'; } catch (_) { /* não suportado */ }
+            }
+
+            // Ecrã inteiro (esconde a barra de endereço). Android/Chrome e iPad suportam;
+            // o Safari no iPhone não — aí só instalando a app no ecrã principal.
+            const fsBtn = document.getElementById('mFullscreenBtn');
+            const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+            const fsRequest = () => {
+                const el = document.documentElement;
+                const req = el.requestFullscreen || el.webkitRequestFullscreen;
+                if (!req) return;
+                try {
+                    const p = req.call(el, { navigationUI: 'hide' });
+                    if (p && p.catch) p.catch(() => { /* recusado pelo browser */ });
+                } catch (_) { /* recusado pelo browser */ }
+            };
+            const fsExit = () => (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+            const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+            if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled) || standalone) {
+                fsBtn.remove();
+            } else {
+                const syncFsBtn = () => { fsBtn.textContent = fsEl() ? 'Exit full screen' : 'Full screen'; };
+                fsBtn.addEventListener('click', () => { fsEl() ? fsExit() : fsRequest(); });
+                // Na horizontal entra em ecrã inteiro ao primeiro toque (os browsers exigem um gesto).
+                // Se o utilizador sair à mão, não voltamos a forçar: fica o botão no menu.
+                let fsDeclined = false;
+                document.addEventListener('fullscreenchange', () => {
+                    if (!fsEl()) fsDeclined = true;
+                    syncFsBtn();
+                });
+                document.addEventListener('webkitfullscreenchange', syncFsBtn);
+                document.addEventListener('pointerup', (e) => {
+                    if (fsDeclined || fsEl() || !isKerfMobile() || e.pointerType === 'mouse') return;
+                    if (e.target.closest('#mFullscreenBtn')) return;
+                    if (matchMedia('(orientation: landscape)').matches) fsRequest();
+                }, true);
             }
 
             // Separador ativo (o botão de Slices só aparece no Editor)
