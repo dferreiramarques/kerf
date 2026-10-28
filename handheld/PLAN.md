@@ -27,7 +27,7 @@ His request, as he wrote it:
 ## How to run the session
 
 1. Read this file, then only the files under "Where things are". Do not re-read the code base.
-2. Ask David the "Open questions" in one AskUserQuestion call.
+2. Ask David the "Open questions" with AskUserQuestion (4 questions per call at most, so two calls).
 3. Work phase by phase. Each phase ends with: build, `ctest`, a local commit, a short report. If usage
    is tight, finish the phase in progress and stop there.
 4. The cloud sandbox cannot push (no GitHub credentials; the proxy refuses). See "Notes for pushing".
@@ -45,9 +45,11 @@ His request, as he wrote it:
 | 4 | 6 | File management and an on-screen keyboard | Rename, delete, copy and folders work and are tested on temp dirs | 120-200k |
 | 5 | 5 | Power: diagnostics, idle redraw, measurements | Before/after numbers from the device | 60-100k |
 | R | all | Release 0.6.0 | Zips, checksums, docs, landing page, roadmap | 30-50k |
+| K | 7 | Research on a port to the Behringer KICK (read-only, independent of 0.6.0) | Findings and a go/no-go written into section 7 | 30-60k |
 
 Total about 450-750k tokens (5 or 6 sessions). The effects alone (phases 0-2) are about 250-400k.
 Suggested first session: phases 0, 1 and 2.
+Phase K (30-60k) comes on top of that total. It is read-only and independent, so it also fits a short session of its own.
 
 ## 1. Project compatibility, web and handheld
 
@@ -178,6 +180,92 @@ Design:
 - Tests on temporary folders (Linux): collisions, non-empty delete, read-only error, long and Unicode names,
   case-only rename, path-guard escapes.
 
+## 7. Research: a port to the Behringer KICK (Music Tribe 0700-AAM)
+
+Added later on 2026-10-28. **Not part of 0.6.0**: a separate, read-only research track (phase K). It can run
+before, between or after the 0.6.0 phases, and it writes no Kerf code.
+
+His words:
+
+> ler este git (MusicTribeOpenSource/0700-AAM) e ver como se faria um port. vê isto para perceber como
+> podemos fazer o contribute... vou tentar ter o hardware para testar (CONTRIBUTING.md)
+
+Links (without the `fbclid` tracking part):
+
+- https://github.com/MusicTribeOpenSource/0700-AAM
+- https://github.com/MusicTribeOpenSource/.github/blob/main/CONTRIBUTING.md
+
+**What the repo page says** (read on 2026-10-28; it is a young repo with 14 commits, so read it again):
+
+- The product is the Behringer KICK (model BE 0700-AAM), a standalone music production center: 7" touch
+  screen, 16 RGB pads in 8 banks, a sampler with editing, step sequencer and looper, 300+ effects, 4 knobs,
+  a jog wheel, SD slot, USB-C and USB-A, MIDI DIN, CV/Gate, and the Music Tribe JAM DAW.
+- Folders: `Kick/` (the application), `AudIO/` (the audio engine library), `ComProtocol/`, `Linux/` (a
+  Buildroot image, so the unit runs Linux), `docs/images/`, `.github/`. Two open pull requests and a Discord.
+- Licences: AGPL-3.0-or-later for `Kick/`, `AudIO/` and `ComProtocol/`; GPL-2.0 for the Buildroot image;
+  the trademarks (names, logos) are excluded.
+- **Not on the page**, so the research has to find it: the SoC and CPU architecture, the RAM, the
+  languages and UI toolkit, the build instructions, any SDK, plugin or third-party sampler format, any
+  simulator or developer hardware, and how the unit is flashed.
+
+**How to contribute** (CONTRIBUTING.md, read on 2026-10-28; re-read it before opening anything):
+
+- Fork, branch, pull request. For a big change, open an issue or ask on Discord first. A new sampler and
+  sequencer app is a big change, so ask before writing code. They say they answer in about 48 hours.
+- Every commit is signed off with `git commit -s` (DCO; there is no CLA and the contributor keeps the
+  copyright). The sign-off is David's own statement, so he makes or amends the commits himself
+  (`git rebase --signoff` adds it to a whole series); the sandbox cannot push anyway.
+- Anything about hardware compatibility needs a `specs/` document first. Whoever has looked at decompiled
+  or proprietary material may only write specs, and someone else writes the code. So: **never look at
+  decompiled firmware**, and say so in the PR.
+- The PR must say where the work comes from. AI help is allowed, but large AI-written parts must be
+  disclosed and understood by the contributor. Kerf's handheld port was written with Claude, so the PR says
+  so, and David has to be able to explain the code he sends.
+- Not accepted: proprietary firmware, leaked or decompiled source, keys, cracks, binaries, misused logos.
+  A change to the flashing procedure needs an own-risk warning. Ports are not mentioned in the guide.
+
+**Licence fit.** Kerf is MIT (`LICENSE`). MIT code can go into an AGPL project (the combination is AGPL, the
+original stays MIT). Code copied from `Kick/` or `AudIO/` into Kerf would make that part AGPL, so do not do it:
+keep `core/` independent and put any glue code in the KICK repo. This is not legal advice; David decides.
+
+**Three shapes a port could take** (guesses to check against the code, not findings):
+
+1. A page or app inside `Kick/` (slicer, sequencer, effects) with Kerf's `core/` added as a library and the
+   sound going out through `AudIO/`. The most integrated, and the only one that uses the unit's own audio
+   path and pads. The UI would be new: touch plus 16 pads, 4 knobs and a jog wheel, instead of a 640x480
+   d-pad screen. The 16 pads map naturally to the 16 steps and to slice triggers.
+2. A standalone SDL2 program on the Buildroot image, the same shape as the muOS port. The cheapest, if the
+   image has SDL2 and ALSA and lets third-party programs run, but it would not share the unit's own sampler,
+   effects or storage.
+3. Only parts of `core/` (the slicer, the 0.6.0 effects) as a module for `AudIO/`.
+
+**Questions the research has to answer**
+
+1. How do apps and samplers plug into `Kick/` and `AudIO/` (an SDK, a plugin format, or editing the app)?
+2. CPU architecture, audio API, UI toolkit, C++ standard and build system (CMake? a Buildroot package?).
+   Can `core/` (C++20, no allocation while rendering, a snapshot of the slice bank) build in their toolchain?
+3. **Is there a simulator or a PC build?** That decides how much can be tested without the unit.
+4. Does the KICK already have a sample, kit or project format that Kerf should read or write (like topic 1)?
+5. How would the touch screen, pads, knobs and jog wheel map onto Kerf's pages?
+6. Where should the code live (their repo, or an own AGPL repo), and what would the maintainers accept?
+7. What can be checked without hardware (cross-build, headless tests) and what needs the unit?
+
+**Method (phase K, about 30-60k tokens; nothing is written to the repo except the findings in this section)**
+
+1. Shallow-clone `0700-AAM` in the sandbox (reading GitHub works from there) or use WebFetch. Download no
+   binaries or firmware images.
+2. Read: the README files, the build files of `Kick/`, `AudIO/` and `ComProtocol/`, the public headers of
+   `AudIO/`, the Buildroot configuration under `Linux/` (architecture, SDL2 or ALSA, Qt?), `docs/`, and the two
+   open pull requests (they show what the maintainers ask for).
+3. Replace the list above with findings and give a go/no-go, with the smallest useful first step (maybe a
+   `specs/` note, or Kerf's `core/` built headless inside their toolchain).
+4. Posting an issue, a Discord message or a PR is publishing under David's name. The sandbox prepares the
+   text; David sends it, or says yes in the chat for that exact text.
+
+**Hardware.** David will try to get a unit to test. Until then it is research and, at most, a cross-build. This
+is the same limit as the muOS port: the sandbox builds and runs headless tests, David tries it on the device
+and reports back. Do not write UI code for the KICK without a simulator or a unit.
+
 ## Where things are (identifiers, not line numbers, are the stable part)
 
 - Engine: `core/src/engine.cpp` `Engine::renderChunk` (voices mixed, then `masterVolume_`, then the peak),
@@ -201,6 +289,8 @@ Design:
 4. On-screen keyboard: ASCII only or with Portuguese accents?
 5. A real web project `.zip` for the tests, and which other port to use as the battery baseline.
 6. Release tag (not starting with `v`): reuse `muOS` or a new `handheld-0.6.0`?
+7. KICK (phase K): when does he expect to have a unit? Until then it stays research only (recommended).
+8. KICK: ask upstream first (an issue or Discord post that David sends) or keep it private until it runs?
 
 ## Release checklist (R)
 
