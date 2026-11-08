@@ -205,6 +205,7 @@ build_portmaster() {
         -L"$WORK" -l:libSDL2-2.0.so.0 -lpthread -s
 
     text "$HANDHELD/portmaster/Kerf.sh" "$pkg/Kerf.sh" unix
+    text "$HANDHELD/portmaster/update.sh" "$pkg/kerf/update.sh" unix
     local f
     for f in port.json gameinfo.xml README.md LEIA-ME.txt; do text "$HANDHELD/portmaster/$f" "$pkg/kerf/$f" unix; done
     cp "$HANDHELD/portmaster/screenshot.png" "$pkg/kerf/screenshot.png"
@@ -216,6 +217,7 @@ build_portmaster() {
     : > "$manifest"
     printf '755\t%s\t%s\n' "$pkg/Kerf.sh" "Kerf.sh" >> "$manifest"
     printf '755\t%s\t%s\n' "$pkg/kerf/kerf.aarch64" "kerf/kerf.aarch64" >> "$manifest"
+    printf '755\t%s\t%s\n' "$pkg/kerf/update.sh" "kerf/update.sh" >> "$manifest"
     for f in port.json gameinfo.xml README.md LEIA-ME.txt screenshot.png; do
         printf '644\t%s\t%s\n' "$pkg/kerf/$f" "kerf/$f" >> "$manifest"
     done

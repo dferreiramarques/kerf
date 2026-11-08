@@ -5,7 +5,8 @@ screen, two analog sticks). **The left stick moves the START of the selected sli
 stick moves its END.** The same program also runs on a PC (Windows, Linux) with a keyboard or any
 game controller; that is how it is developed and tested.
 
-Status: version 0.5.0. Kerf has two sets of pages, and **Select goes round the pages of the set
+Status: version 0.5.1 (0.5.0 plus two handheld fixes: muOS no longer dims, mutes or sleeps while
+Kerf plays, and the PortMaster package updates itself when online; see CHANGELOG.md). Kerf has two sets of pages, and **Select goes round the pages of the set
 you are in**. It starts on *Record* (REC), which takes sound from a USB microphone, a
 wireless-microphone receiver or an audio interface, saves it as a WAV file in the samples folder
 and loads it into the slicer; the library of samples (LOAD), where a sample is picked from a

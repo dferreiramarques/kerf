@@ -4,6 +4,9 @@
 
 XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 
+# Where this launcher is (on muOS: ROMS/PORTS), so the updater can replace it too.
+LAUNCHER="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+
 if [ -d "/opt/system/Tools/PortMaster/" ]; then
   controlfolder="/opt/system/Tools/PortMaster"
 elif [ -d "/opt/tools/PortMaster/" ]; then
@@ -32,6 +35,14 @@ export SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig"
 # The way out is built into Kerf: hold SELECT + START for one second.
 
 chmod +x "$GAMEDIR/kerf.${DEVICE_ARCH}" 2>/dev/null
+
+# Online: a newer Kerf from the GitHub release is checked, downloaded and put in place first
+# (kerf/update.sh; an empty file kerf/no-update turns it off). Offline it gives up after 3 seconds.
+if [ -f "$GAMEDIR/update.sh" ]; then
+  type pm_message >/dev/null 2>&1 && pm_message "Kerf: checking for updates..."
+  bash "$GAMEDIR/update.sh" "$GAMEDIR" "$LAUNCHER" "kerf.${DEVICE_ARCH}"
+  chmod +x "$GAMEDIR/kerf.${DEVICE_ARCH}" 2>/dev/null
+fi
 
 pm_platform_helper "$GAMEDIR/kerf.${DEVICE_ARCH}"
 "./kerf.${DEVICE_ARCH}" --fullscreen

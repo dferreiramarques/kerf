@@ -44,6 +44,7 @@
 #include "engine.h"
 #include "fake_input.h"
 #include "format.h"
+#include "idle_inhibit.h"
 #include "input.h"
 #include "midi_input.h"
 #include "path_util.h"
@@ -58,7 +59,7 @@ using namespace kerf::ui;
 
 namespace
 {
-    constexpr const char* kVersion = "0.5.0";
+    constexpr const char* kVersion = "0.5.1";
 
     // ------------------------------------------------------------------------------------ log
 
@@ -489,6 +490,23 @@ namespace
         long frame = 0;
         bool isFullscreen = fullscreen;
 
+        // While Kerf sounds, muOS must not dim the screen, mute or sleep (idle_inhibit.h).
+        IdleInhibit idle;
+
+        if (idle.supported())
+            logLine ("muOS idle inhibit available: the screen stays on while Kerf plays");
+
+        auto updateIdle = [&]
+        {
+            Engine::Playhead heads[1];
+            const bool sounding = engine->sequencer().isPlaying()
+                                  || engine->copyPlayheads (heads, 1) > 0
+                                  || app.recording().phase() == RecordSession::Phase::recording;
+
+            if (idle.set (sounding))
+                logLine (sounding ? "Playing: muOS idle (dim, mute, sleep) held off" : "Stopped: muOS idle allowed again");
+        };
+
         auto setFullscreen = [&] (bool on)
         {
             isFullscreen = on;
@@ -543,6 +561,10 @@ namespace
             app.setHostStatus (status);
 
             app.update (pad, dt);
+
+            if (frame % 15 == 0)   // four times a second is plenty for timers counted in seconds
+                updateIdle();
+
             app.draw (canvas);
 
             if (runner)

@@ -1,4 +1,4 @@
-KERF PARA CONSOLAS PORTÁTEIS - versão 0.5.0 para Windows (versão de teste)
+KERF PARA CONSOLAS PORTÁTEIS - versão 0.5.1 para Windows (versão de teste)
 ==========================================================================
 
 NOTA: a 0.5.0 (guardar e carregar projetos à mão, a página PROJ) foi feita depressa: só foi

@@ -1,5 +1,10 @@
-KERF PARA O RG35XX H (PortMaster) - versão 0.5.0
+KERF PARA O RG35XX H (PortMaster) - versão 0.5.1
 ================================================
+
+NOVO NA 0.5.1: o ecrã já não escurece, o som já não é cortado e o aparelho já não adormece
+enquanto o Kerf está a tocar ou a gravar (ver "Ecrã e som enquanto tocas"), e o Kerf atualiza-se
+sozinho quando o aparelho está ligado à net (ver "Atualizações automáticas"). Nenhuma das duas foi
+ainda experimentada no aparelho.
 
 NOTA: o slicer (0.1.0), as duas páginas com o sequenciador (0.2.0), a leitura direta do teclado
 MIDI USB (0.2.1) e a GRAVAÇÃO de áudio por USB (0.3.0, com um microfone de lapela sem fios
@@ -58,14 +63,38 @@ no Knulli instalas o PortMaster em Start > Device Settings > Install PortMaster.
    (gravar) para a página LOAD (a biblioteca de samples), onde navegas para qualquer pasta do
    cartão. O Kerf lê WAV, MP3 e FLAC. Mais um Select leva à página PROJ (projetos guardados).
 
-Atualizar a partir da 0.1.0, 0.2.0, 0.2.1, 0.3.0, 0.3.1 ou 0.4.0
------------------------------------------------------------------
+Atualizar a partir da 0.1.0, 0.2.0, 0.2.1, 0.3.0, 0.3.1, 0.4.0 ou 0.5.0
+------------------------------------------------------------------------
+Para chegar à 0.5.1 copia TUDO desta vez (o Kerf.sh e a pasta kerf, como na instalação; o
+kerf.cfg e as samples que já lá tens não são substituídos se não os copiares por cima): é a 0.5.1
+que traz o atualizador. Depois disso, as versões seguintes chegam sozinhas pela net. O resto desta
+secção é como era até à 0.5.0.
 Só muda o programa. Substitui o ficheiro ports/kerf/kerf.aarch64 pelo que vem neste zip (pela
 rede, com o SFTP, ou com o cartão ligado ao PC). Não mexas em kerf.cfg nem em samples: os teus
 ajustes e os teus sons ficam. O Kerf.sh e o resto da pasta kerf não mudaram de função. Os projetos
 (ficheiros .kerf) ficam ao lado do sample: leva o projeto com o sample se o mudares de sítio. Na
 0.5.0 o guardar automático da 0.4.0 vem DESLIGADO (Start > Settings > Autosave; no kerf.cfg a
 linha "projects" foi substituída por "autosave"): passas a guardar tu, com o Start > Save project.
+
+Ecrã e som enquanto tocas
+-------------------------
+O muOS escurece o ecrã, corta o som e adormece o aparelho quando ninguém carrega num botão durante
+algum tempo (Configuration > Power Settings). A partir da 0.5.1, enquanto o sequenciador toca,
+uma slice soa ou estás a gravar, o Kerf pede ao muOS para esperar, tal como faz o leitor de vídeo
+do próprio muOS. Quando o som pára, os tempos do muOS voltam a contar a partir desse momento.
+
+Atualizações automáticas (com o aparelho ligado à net)
+------------------------------------------------------
+Desde a 0.5.1, sempre que abres o Kerf com o Wi-Fi ligado, o lançador (Kerf.sh) vê no GitHub
+se há uma versão nova do Kerf para o aparelho. Se houver, descarrega-a, confirma que o ficheiro
+chegou inteiro (SHA256SUMS da release), confirma que o programa novo arranca e só depois o põe no
+lugar do antigo. O Kerf abre já na versão nova. O kerf.cfg, as tuas samples e os teus projetos não
+são tocados; o programa antigo fica guardado como kerf/kerf.aarch64.prev. Sem net, desiste ao fim
+de 3 segundos e o Kerf abre como está. O que aconteceu fica no kerf/log.txt (linhas "update:") e,
+depois de uma atualização, o kerf/updated.txt diz de que versão para que versão.
+Para desligar: cria um ficheiro vazio chamado no-update dentro da pasta kerf.
+Esta é a última vez que atualizas à mão: copia esta versão inteira (o Kerf.sh e a pasta kerf, como
+na instalação), porque é ela que traz o atualizador (kerf/update.sh).
 
 Teclado MIDI USB
 ----------------

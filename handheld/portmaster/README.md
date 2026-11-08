@@ -6,7 +6,10 @@ or from a USB MIDI keyboard, and put them in a 16-step pattern on the sequencer 
 the Record page; Select goes round the pages of the set you are on (record / sample library /
 project library, and slicer / sequencer). It is the handheld version of the Kerf web app (https://kerf.monco.io).
 
-**Version 0.5.0.** The slicer (0.1.0), the two pages with the sequencer (0.2.0), the USB MIDI
+**Version 0.5.1.** New: muOS no longer dims the screen, mutes or sleeps while Kerf plays or
+records, and when the handheld is online `Kerf.sh` updates Kerf from the GitHub release before
+starting it (an empty file `kerf/no-update` turns that off). Neither has been tried on the
+device yet. The slicer (0.1.0), the two pages with the sequencer (0.2.0), the USB MIDI
 reading of 0.2.1 and the recording from USB (0.3.0, with a generic wireless lavalier microphone on
 the USB-C port) have been confirmed on a real Anbernic RG35XX H with muOS 2606.0 by its author.
 Not tried on the device yet: a Tascam Model 12 (or another audio interface), the start page of

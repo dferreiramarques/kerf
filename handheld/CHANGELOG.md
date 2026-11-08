@@ -1,5 +1,33 @@
 # Changes
 
+## 0.5.1
+
+- **muOS no longer dims the screen, mutes or sleeps while Kerf is playing.** muOS counts only
+  the time since the last button press, so a song on the sequencer was cut off by "Idle Input
+  Display Timeout" (with "Mute on Display Timeout") and later "Idle Input Sleep Timeout". While
+  the sequencer plays, a slice sounds or a take is being recorded, Kerf now writes its PID to
+  `/run/muos/idle_game_inhibit` and `/run/muos/idle_sleep_inhibit`. This is the same thing
+  muOS's own video player does, and muOS's hotkey daemon skips both timers while those files
+  name a running process. When the sound stops Kerf takes its PID out again, so the muOS
+  timeouts work as before when nothing is playing (counted from that moment). Only on firmwares
+  with `/run/muos`; elsewhere nothing changes. `kerf-log.txt` says when it holds idle off and
+  when it lets go. Read from the muOS 2606.0 sources (`muhotkey.c`); **not compiled or tried on
+  the RG35XX H yet.**
+- **Updates itself when the handheld is online.** `Kerf.sh` now runs `kerf/update.sh` before Kerf
+  starts. It asks the GitHub API for the release with the tag `muOS` of `dferreiramarques/kerf`
+  and compares its `Kerf-handheld-<version>-portmaster-aarch64.zip` with `kerf.aarch64 --version`.
+  When the release is newer, it downloads the zip and checks it against the release's
+  `SHA256SUMS*.txt`. It unpacks it to `kerf/.update` and checks that the new program starts and
+  reports that version. Only then does it put each file in place (copy + rename), keeping the old
+  program as `kerf.aarch64.prev`, and it replaces `Kerf.sh` wherever it is (ROMS/PORTS on muOS).
+  `kerf.cfg`, the logs, samples (except a missing demo) and projects are left alone. Offline,
+  the check gives up after 3 s. Any failure (no `curl`/`unzip`/`sha256sum`, bad checksum, a
+  program that does not start) is only a line in `log.txt`, and Kerf starts as it is. An empty
+  file `kerf/no-update` turns it off. `build-release.sh` packs `kerf/update.sh`. To publish an
+  update: raise `kVersion`, then upload the new zip and its `SHA256SUMS-<version>.txt` to the
+  `muOS` release (as for 0.5.0). **Not run yet**: there was no bash on the machine where it was
+  written. This version must be installed by hand once.
+
 ## 0.5.0
 
 - **Projects are saved and loaded by hand now.** Start menu (Tab) on the slicer or the sequencer:
