@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "enables the default permissions",
+  "description": "Default permissions. File access has no standing scope: the dialog plugin adds each file the user picks in an open/save dialog to the fs scope, and nothing else is reachable.",
   "windows": [
     "main"
   ],
@@ -12,16 +12,6 @@
     "dialog:allow-message",
     "fs:allow-read-file",
     "fs:allow-write-file",
-    "midi:default",
-    {
-      "identifier": "fs:scope",
-      "allow": [
-        { "path": "$HOME/**" },
-        { "path": "$AUDIO/**" },
-        { "path": "$DOCUMENT/**" },
-        { "path": "$DESKTOP/**" },
-        { "path": "$DOWNLOAD/**" }
-      ]
-    }
+    "midi:default"
   ]
 }

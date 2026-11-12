@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include <limits>
 #include "PluginEditor.h"
 #include "TransientDetector.h"
 #include "Persistence/StatePersistence.h"
@@ -61,6 +62,10 @@ void KerfAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
 {
     buffer.clear();
 
+    const juce::SpinLock::ScopedTryLockType audioLock (audioSwapLock);
+    if (! audioLock.isLocked())
+        return; // a new sample is being installed right now - one block of silence
+
     const auto slices = sliceBank.getCurrent();
 
     // Drain UI-originated preview/retrigger requests queued since the last block. These only
@@ -122,6 +127,7 @@ juce::AudioProcessorEditor* KerfAudioProcessor::createEditor()
 
 void KerfAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
+    const juce::ScopedLock stateLock (sampleStateLock);
     const auto tree = StatePersistence::buildStateTree (
         apvts, sliceBank, selectedSliceForEditing.load(), loadedSampleName,
         sampleBuffer.getNumSamples() > 0 ? &sampleBuffer : nullptr, sampleSourceRate);
@@ -134,17 +140,29 @@ void KerfAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     juce::MemoryInputStream stream (data, (size_t) sizeInBytes, false);
     const auto tree = juce::ValueTree::readFromStream (stream);
-    const auto restored = StatePersistence::applyStateTree (tree, apvts);
+    auto restored = StatePersistence::applyStateTree (tree, apvts);
 
-    voiceEngine.allNotesOff();
-
+    const juce::ScopedLock stateLock (sampleStateLock);
+    installSample (std::move (restored.sampleBuffer), restored.sampleSourceRate, std::move (restored.slices));
     selectedSliceForEditing.store (restored.selectedSlice);
     loadedSampleName = restored.sampleName;
-    sampleSourceRate = restored.sampleSourceRate;
-    sampleBuffer = std::move (restored.sampleBuffer);
-    sliceBank.replaceAll (restored.slices);
+}
 
-    voiceEngine.setSampleSource (sampleBuffer.getNumSamples() > 0 ? &sampleBuffer : nullptr, sampleSourceRate);
+void KerfAudioProcessor::installSample (juce::AudioBuffer<float>&& newBuffer, double newRate, std::vector<Slice> newSlices)
+{
+    if (! (newRate > 0.0 && newRate <= 1.0e6))
+        newRate = 44100.0;
+
+    {
+        const juce::SpinLock::ScopedLockType audioLock (audioSwapLock);
+        voiceEngine.allNotesOff();
+        std::swap (sampleBuffer, newBuffer);
+        sampleSourceRate = newRate;
+        sliceBank.replaceAll (std::move (newSlices));
+        voiceEngine.setSampleSource (sampleBuffer.getNumSamples() > 0 ? &sampleBuffer : nullptr, sampleSourceRate);
+    }
+
+    // newBuffer now holds the previous sample; it is freed here, outside the audio lock.
 }
 
 bool KerfAudioProcessor::loadSampleFile (const juce::File& file)
@@ -153,20 +171,22 @@ bool KerfAudioProcessor::loadSampleFile (const juce::File& file)
     if (reader == nullptr)
         return false;
 
+    // AudioBuffer sizes are ints; refuse what would overflow rather than truncating.
+    if (reader->lengthInSamples <= 0 || reader->lengthInSamples > std::numeric_limits<int>::max()
+        || reader->numChannels == 0 || reader->numChannels > 32)
+        return false;
+
+    // Decoding happens before any lock: the audio thread keeps playing the old sample meanwhile.
     juce::AudioBuffer<float> newBuffer ((int) reader->numChannels, (int) reader->lengthInSamples);
     reader->read (&newBuffer, 0, (int) reader->lengthInSamples, 0, true, true);
 
-    sampleBuffer = std::move (newBuffer);
-    sampleSourceRate = reader->sampleRate;
-    loadedSampleName = file.getFileName();
+    const juce::ScopedLock stateLock (sampleStateLock);
 
     // A new sample invalidates any previous slice boundaries (they were positions into the old
     // audio). Not clearing them would leave stale start/end points pointing past the new sample.
-    sliceBank.clear();
+    installSample (std::move (newBuffer), reader->sampleRate, {});
+    loadedSampleName = file.getFileName();
     selectedSliceForEditing.store (0);
-
-    voiceEngine.allNotesOff();
-    voiceEngine.setSampleSource (&sampleBuffer, sampleSourceRate);
 
     return true;
 }

@@ -5689,12 +5689,120 @@
             await loadProjectFromBlob(file);
         });
 
+        // A project file can come from anyone, so nothing in project.json reaches state (and from
+        // there the HTML templates) without being checked: numbers must be finite and are clamped
+        // to the ranges the UI allows, enums are whitelisted, and every list is bounded.
+        const MAX_PROJECT_SLICES = 256;
+        const MAX_PROJECT_STEPS = 64;
+        const MAX_PROJECT_JSON_CHARS = 5 * 1024 * 1024;
+
+        function sanitizeProjectData(raw) {
+            const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+            const num = (v, min, max, fallback) => {
+                const n = Number(v);
+                return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+            };
+            const int = (v, min, max, fallback) => Math.round(num(v, min, max, fallback));
+            const oneOf = (v, allowed, fallback) => allowed.includes(v) ? v : fallback;
+            const bool = (v, fallback) => typeof v === 'boolean' ? v : fallback;
+            const STEP_VALUES = ['empty', 'trigger', 'flame'];
+            const STEP_COUNTS = [8, 12, 16, 20, 24, 28, 32];
+
+            const p = obj(raw);
+            const slices = (Array.isArray(p.slices) ? p.slices : []).slice(0, MAX_PROJECT_SLICES).map((s) => {
+                s = obj(s);
+                const start = num(s.start, 0, 86400, 0);
+                return {
+                    start,
+                    end: num(s.end, start, 86400, start),
+                    pitch: num(s.pitch, 1 / 16, 16, 1),
+                    volume: num(s.volume, 0, 1, 1),
+                    pan: num(s.pan, -1, 1, 0),
+                    enabled: bool(s.enabled, true),
+                    mode: oneOf(s.mode, ['shot', 'loop'], 'shot'),
+                    fadeIn: num(s.fadeIn, 0, 2000, 1),
+                    fadeOut: num(s.fadeOut, 0, 2000, 50),
+                    expanded: false
+                };
+            });
+
+            // pattern: { sliceIdx: { step: 'empty'|'trigger'|'flame' } }; mute/solo: { sliceIdx: bool }
+            const pattern = (v) => {
+                const out = {};
+                for (const [k, row] of Object.entries(obj(v))) {
+                    const idx = Number(k);
+                    if (!Number.isInteger(idx) || idx < 0 || idx >= MAX_PROJECT_SLICES) continue;
+                    out[idx] = {};
+                    for (const [stepKey, value] of Object.entries(obj(row))) {
+                        const step = Number(stepKey);
+                        if (Number.isInteger(step) && step >= 0 && step < MAX_PROJECT_STEPS)
+                            out[idx][step] = oneOf(value, STEP_VALUES, 'empty');
+                    }
+                }
+                return out;
+            };
+            const flags = (v) => {
+                const out = {};
+                for (const [k, value] of Object.entries(obj(v))) {
+                    const idx = Number(k);
+                    if (Number.isInteger(idx) && idx >= 0 && idx < MAX_PROJECT_SLICES && value === true) out[idx] = true;
+                }
+                return out;
+            };
+            const scene = (sc) => {
+                sc = obj(sc);
+                return {
+                    pattern: pattern(sc.pattern),
+                    mute: flags(sc.mute),
+                    solo: flags(sc.solo),
+                    stepCount: oneOf(Number(sc.stepCount), STEP_COUNTS, 16),
+                    bpm: num(sc.bpm, 40, 300, 120)
+                };
+            };
+
+            const e = obj(p.effects);
+            const effects = {
+                compressor: { ratio: num(obj(e.compressor).ratio, 1, 8, 1), mix: int(obj(e.compressor).mix, 0, 100, 0), enabled: bool(obj(e.compressor).enabled, true) },
+                overdrive: { drive: int(obj(e.overdrive).drive, 0, 100, 0), mix: int(obj(e.overdrive).mix, 0, 100, 0), enabled: bool(obj(e.overdrive).enabled, true) },
+                decimator: { bits: int(obj(e.decimator).bits, 2, 16, 16), mix: int(obj(e.decimator).mix, 0, 100, 0), enabled: bool(obj(e.decimator).enabled, true) },
+                reverb: { mode: oneOf(obj(e.reverb).mode, ['short', 'long'], 'short'), mix: num(obj(e.reverb).mix, 0, 50, 0), enabled: bool(obj(e.reverb).enabled, true) },
+                bypass: bool(e.bypass, false)
+            };
+
+            return {
+                audioFileName: typeof p.audioFileName === 'string' ? p.audioFileName.slice(0, 255) : '',
+                bpm: num(p.bpm, 40, 300, 120),
+                swingAmount: num(p.swingAmount, 0, 100, 0),
+                slices,
+                scenes: Array.isArray(p.scenes) ? p.scenes.slice(0, 8).map(scene) : null,
+                sequencerPattern: pattern(p.sequencerPattern),
+                currentScene: Number.isInteger(p.currentScene) && p.currentScene >= 0 && p.currentScene < 8 ? p.currentScene : 0,
+                effects: p.effects ? effects : null,
+                multiTempoSlices: (Array.isArray(p.multiTempoSlices) ? p.multiTempoSlices : [])
+                    .slice(0, MAX_PROJECT_SLICES)
+                    .map((mt) => {
+                        mt = obj(mt);
+                        return {
+                            sliceIdx: int(mt.sliceIdx, 0, MAX_PROJECT_SLICES - 1, 0),
+                            bpm: int(mt.bpm, 10, 300, 120),
+                            volume: int(mt.volume, 0, 100, 100),
+                            isPlaying: bool(mt.isPlaying, false),
+                            nextNoteTime: null
+                        };
+                    })
+                    .filter((mt) => mt.sliceIdx < slices.length)
+            };
+        }
+
         async function loadProjectFromBlob(file) {
             try {
                 const zip = await JSZip.loadAsync(file);
-                
-                const projectJson = await zip.file('project.json').async('string');
-                const projectData = JSON.parse(projectJson);
+
+                const projectEntry = zip.file('project.json');
+                if (!projectEntry) throw new Error('project.json is missing');
+                const projectJson = await projectEntry.async('string');
+                if (projectJson.length > MAX_PROJECT_JSON_CHARS) throw new Error('project.json is too large');
+                const projectData = sanitizeProjectData(JSON.parse(projectJson));
 
                 const audioFiles = Object.keys(zip.files).filter(f => f.startsWith('audio.'));
                 if (audioFiles.length === 0) {

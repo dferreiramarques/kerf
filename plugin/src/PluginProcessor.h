@@ -83,6 +83,10 @@ private:
     void pushCommand (VoiceCommand cmd);
     bool popCommand (VoiceCommand& cmd);
 
+    // Replaces the sample, its rate and the slices as one step the audio thread never sees
+    // half-done. Called with sampleStateLock held.
+    void installSample (juce::AudioBuffer<float>&& newBuffer, double newRate, std::vector<Slice> newSlices);
+
     juce::AudioProcessorValueTreeState apvts;
     SliceBank sliceBank;
     VoiceEngine voiceEngine;
@@ -93,6 +97,13 @@ private:
     juce::String loadedSampleName;
 
     std::atomic<int> selectedSliceForEditing { 0 };
+
+    // The audio thread only ever try-locks audioSwapLock (it outputs silence for that block if
+    // a swap is in progress), so it never waits on the message thread. sampleStateLock
+    // serialises the non-audio callers that read or replace the sample (load, get/setState),
+    // which some hosts call from different threads.
+    juce::SpinLock audioSwapLock;
+    juce::CriticalSection sampleStateLock;
 
     static constexpr int commandQueueCapacity = 64;
     juce::AbstractFifo commandFifo { commandQueueCapacity };
